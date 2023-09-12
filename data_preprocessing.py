@@ -18,7 +18,7 @@ for line in lines:
         # Add label to dict
         processed_data[label] = set([text])
 
-with open('data/dialog_acts.csv', 'w') as f:
+with open('data/no_duplicates_dialog_acts.csv', 'w') as f:
      
     write = csv.writer(f)
      
