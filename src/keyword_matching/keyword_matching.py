@@ -15,11 +15,20 @@ def match_sentence(sentence: str | int):
     negate_match = check_negate_matches(sentence)
     reqalts_match = check_req_alts_matches(sentence)
     
-    if reqmore_match != 0:
-        return reqmore_match
+    if inform_match != 0:
+        return inform_match
+    
+    if request_match != 0:
+        return request_match
+    
+    if thankyou_match != 0:
+        return thankyou_match
     
     if affirm_match != 0:
         return affirm_match
+    
+    if reqmore_match != 0:
+        return reqmore_match
     
     if ack_match != 0:
         return ack_match
@@ -27,17 +36,8 @@ def match_sentence(sentence: str | int):
     if deny_match != 0:
         return deny_match
     
-    if thankyou_match != 0:
-        return thankyou_match
-    
     if confirm_match != 0:
         return confirm_match
-    
-    if inform_match != 0:
-        return inform_match
-    
-    if request_match != 0:
-        return request_match
     
     if repeat_match != 0:
         return repeat_match
@@ -101,9 +101,9 @@ def check_affirm_matches(sentence: str):
 
 def check_inform_matches(sentence: str):
     # Variations of words often used to inform a statement
-    keywords = ['looking', 'need']
+    keywords = ['looking', 'need', 'serves']
     keypairs = [['cheap', 'food'], ['i', 'want'], ['can', 'have'], ['would', 'like'], ['can', 'find'], 
-                ['are', 'there'], ['surprise', 'me'], ['serves', 'food']]
+                ['are', 'there'], ['surprise', 'me'], ['serves', 'food'], ['doesnt', 'matter']]
     
     keywords_check = keyword_check(sentence, 'inform', keywords)
     keypairs_check = keyword_check_combinations(sentence, 'inform', keypairs)
@@ -148,6 +148,7 @@ def check_ack_matches(sentence: str):
         return keypairs_check
     if keywords_check != 0 and len(split_sentence) <= 2:
         return keywords_check
+    return 0
 
 def check_repeat_matches(sentence: str):
     # Variations of words often used to repeat a statement
@@ -168,7 +169,14 @@ def check_hello_matches(sentence: str):
     keywords = ['hi', 'hello']
     keypairs = [['how', 'are'], ['how', 'doing']]
     
-    return keyword_check(sentence, 'hello', keywords)
+    keywords_check = keyword_check(sentence, 'hello', keywords)
+    keypairs_check = keyword_check_combinations(sentence, 'hello', keypairs)
+    
+    if keypairs_check != 0:
+        return keypairs_check
+    if keywords_check != 0:
+        return keywords_check
+    return 0
     
 def check_negate_matches(sentence: str):
     # Variations of words often used to negate a statement
