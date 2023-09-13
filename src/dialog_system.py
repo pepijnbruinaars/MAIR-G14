@@ -1,6 +1,16 @@
 import csv
 import argparse
 
+from keyword_matching.keyword_matching import match_sentence
+
+# Allowed intent classification methods
+allowed_models = [
+    # 'majority',
+    'keyword',
+    # 'tree',
+    # 'neural'
+]
+
 def load_csv_data(filepath):
     data = {}
     with open(filepath, 'r') as csv_file:
@@ -19,18 +29,41 @@ def load_csv_data(filepath):
     return data
 
 def main(args):
+    # Verify model
+    if args.model not in allowed_models:
+        print(f"Invalid model: {args.model}")
+        return
+    
+    selected_model = args.model
+    
     # Main loop
     running = True
-    print(f"Hello how can I help?")
+    print(f"The selected model is {selected_model}")
+    print("Hello how can I help?")
     while running:
-        usr_input = input().lower()
+        user_input = input().lower()
         
-        if usr_input == "exit":
+        if user_input == "exit":
             running = False
             continue
         
         response = "" # Classifier classification
+        
+        # Switch through models
+        match selected_model:
+            case 'majority':
+                response = "majority"
+            case 'keyword':
+                response = match_sentence(user_input)
+            case 'tree':
+                response = "tree"
+            case 'neural':
+                response = "neural"
+            case _:
+                response = "error"
 
+
+        print(f"Predicted intent: {response}")
         print("Can I help you with anything else?")
 
 if __name__ == '__main__':
