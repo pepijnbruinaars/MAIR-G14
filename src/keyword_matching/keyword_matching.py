@@ -1,12 +1,27 @@
 def match_sentence(sentence: str | int):
+    # Find all matches
     restart_match = check_restart_matches(sentence)
     bye_match = check_bye_matches(sentence)
+    hello_match = check_hello_matches(sentence)
+    negate_match = check_negate_matches(sentence)
+    reqalts_match = check_req_alts_matches(sentence)
+    
     if restart_match != 0:
         return restart_match
     
     if bye_match != 0:
         return bye_match
     
+    if hello_match != 0:
+        return hello_match
+    
+    if negate_match != 0:
+        return negate_match
+    
+    if reqalts_match != 0:
+        return reqalts_match
+    
+    # No matches found
     return 0
     
 def check_hello_matches(sentence: str):
