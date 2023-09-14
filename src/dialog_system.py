@@ -2,6 +2,7 @@ import csv
 import argparse
 
 from keyword_matching.keyword_matching import match_sentence
+from testing.test_model import test_models
 
 # Allowed intent classification methods
 allowed_models = [
@@ -11,24 +12,12 @@ allowed_models = [
     # 'neural'
 ]
 
-def load_csv_data(filepath):
-    data = {}
-    with open(filepath, 'r') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        next(csv_reader, None) # skip header
-        
-        # Load csv data into dict sorted by label
-        for row in csv_reader:
-            label = row[0]
-            text = row[1]
-            if label in data.keys():
-                data[label].append(text)
-            else:
-                data[label] = [text]
-        
-    return data
-
 def main(args):
+    if args.test:
+        # Run test suite
+        test_models()
+        return
+    
     # Verify model
     if args.model not in allowed_models:
         print(f"Invalid model: {args.model}")
@@ -36,10 +25,11 @@ def main(args):
     
     selected_model = args.model
     
+    
     # Main loop
     running = True
     print(f"The selected model is {selected_model}")
-    print("Hello how can I help?")
+    print("Hello, how can I help?")
     while running:
         user_input = input().lower()
         
@@ -70,5 +60,6 @@ if __name__ == '__main__':
     # Set up argparser
     parser = argparse.ArgumentParser(description='Restaurant recommendation chatbot')
     parser.add_argument('-m', '--model', help="Select the classification model to be used")
+    parser.add_argument('-t', '--test', help="Run the test suite", action='store_true')
     args = parser.parse_args()
     main(args)
