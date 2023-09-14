@@ -36,6 +36,10 @@ def plot_label_distribution():
     for label, sentences in no_dupe_data.items():
         no_dupe_label_counts[label] = len(sentences)
         
+    # Sort labels by count
+    label_counts = dict(sorted(label_counts.items(), key=lambda item: item[1], reverse=True))
+    no_dupe_label_counts = dict(sorted(no_dupe_label_counts.items(), key=lambda item: item[1], reverse=True))
+        
     # Plot data
     fig, axs = plt.subplots(2, 1, figsize=(10, 10))
     fig.suptitle('Label Distribution')
