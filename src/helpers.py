@@ -1,3 +1,4 @@
+from nltk.corpus import stopwords
 import csv
 
 def load_csv_data(filepath):
@@ -16,3 +17,24 @@ def load_csv_data(filepath):
                 data[label] = [text]
         
     return data
+
+def save_data_as_csv(filepath, data_dict):
+    with open(filepath, 'w') as f:
+     
+        write = csv.writer(f)
+        
+        write.writerow(["label", "text"])
+        for key in data_dict.keys():
+            for entry in data_dict[key]:
+                row = [key]
+                row.append(entry)
+                write.writerow(row)
+
+def remove_stopwords(data_dict):
+    stop_words = set(stopwords.words('english'))
+
+    for key, entries in data_dict.items():
+        data_dict[key] = [" ".join([word for word in entry.split() if word not in stop_words])\
+                           for entry in entries]
+
+    return data_dict
