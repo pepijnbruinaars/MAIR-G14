@@ -63,7 +63,8 @@ def match_sentence(sentence: str | int):
 def check_request_matches(sentence: str):
     # Variations of words often used to request something
     keypairs = [['could', 'get'], ['can', 'get'], ['what', 'is'], ['what', 'does'],
-                ['what', 'are'], ['what', 'do'], ['what', 'kind'], ['what', 'type']]
+                ['what', 'are'], ['what', 'do'], ['what', 'kind'], ['what', 'type'],
+                ['may', 'i']]
     
     keypairs_check = keyword_check_combinations(sentence, 'request', keypairs)
     
@@ -103,7 +104,8 @@ def check_inform_matches(sentence: str):
     # Variations of words often used to inform a statement
     keywords = ['looking', 'need', 'serves']
     keypairs = [['cheap', 'food'], ['i', 'want'], ['can', 'have'], ['would', 'like'], ['can', 'find'], 
-                ['are', 'there'], ['surprise', 'me'], ['serves', 'food'], ['doesnt', 'matter']]
+                ['are', 'there'], ['surprise', 'me'], ['serves', 'food'], ['doesnt', 'matter'],
+                ['what', 'got']]
     
     keywords_check = keyword_check(sentence, 'inform', keywords)
     keypairs_check = keyword_check_combinations(sentence, 'inform', keypairs)

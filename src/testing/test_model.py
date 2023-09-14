@@ -16,13 +16,15 @@ def test_models():
         correct_count = 0
         total_count = 0
         incorrect = []
+        predictions = []
         for label, sentences in data.items():
             for sentence in sentences:
                 prediction = match_sentence(sentence)
+                predictions.append(prediction)
                 total_count += 1
                 # Anything which does not match a keyword should be represented like in the csv
                 if prediction == 0:
-                    prediction == "null"
+                    prediction = "null"
                 # Check if prediction matches label
                 if prediction == label:
                     # print(f"Keyword model predicted {prediction} for \"{sentence}\" when it should have predicted {label}")
@@ -37,7 +39,14 @@ def test_models():
             for incorrect_prediction in incorrect:
                 csv_writer.writerow(incorrect_prediction)
         print(f"Keyword model accuracy: {correct_count/total_count}")
-    
+        prediction_count = {}
+        for prediction in predictions:
+            if prediction in prediction_count:
+                prediction_count[prediction] += 1
+            else:
+                prediction_count[prediction] = 1
+        print(f"Prediction counts: {prediction_count}")
+        
     # TODO: Test tree model
     # TODO: Test neural model
     return

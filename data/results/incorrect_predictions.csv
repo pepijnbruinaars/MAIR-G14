@@ -1,408 +1,367 @@
 sentence,label,prediction
-any kind in the north part of town,inform,0
+any kind in the north part of town,inform,null
 what asian oriental type of food,inform,request
-portuguese food in the south,inform,0
-class over,inform,0
-the south part of town please,inform,0
-expensive restaurant breath,inform,0
-a moderately priced restaurant in the south part of town,inform,0
-an expensive unintelligible,inform,0
-ah what have you got for thai food,inform,0
-serving jamaican food,inform,0
-id like a cheap restaurant in the west part of town,inform,0
-indian food in the west part of town,inform,0
-cheap restaurant,inform,0
-gastropub type food noise,inform,0
-restaurant in the west part of town,inform,0
-south of the town,inform,0
-for an expensive restaurant in the east part of town,inform,0
-is there one in the west area,inform,0
-any address,inform,0
-serving romania food,inform,0
-italian food please,inform,0
-air tran,inform,0
-not korean unintelligible,inform,0
-indonesian food east part of town,inform,0
-west part of town cuban food,inform,0
-korean,inform,0
-cheap restaurant in the east part of town,inform,0
-moderately restaurant,inform,0
-north american,inform,0
-catalanian,inform,0
-s e a f o o d,inform,0
-expensive restaurant asian food,inform,0
-moderately priced restaurant in the south part of town,inform,0
-id like a austrian restaurant in the south part of town,inform,0
-noise malaysian noise,inform,0
-an expensive italian restaurant,inform,0
-thare are different expensive restaurants in the east part of town,inform,0
-north american restaurant expensive,inform,0
+portuguese food in the south,inform,null
+class over,inform,null
+the south part of town please,inform,null
+expensive restaurant breath,inform,null
+a moderately priced restaurant in the south part of town,inform,null
+an expensive unintelligible,inform,null
+serving jamaican food,inform,null
+id like a cheap restaurant in the west part of town,inform,null
+indian food in the west part of town,inform,null
+cheap restaurant,inform,null
+gastropub type food noise,inform,null
+restaurant in the west part of town,inform,null
+south of the town,inform,null
+for an expensive restaurant in the east part of town,inform,null
+is there one in the west area,inform,null
+any address,inform,null
+serving romania food,inform,null
+italian food please,inform,null
+air tran,inform,null
+not korean unintelligible,inform,null
+indonesian food east part of town,inform,null
+west part of town cuban food,inform,null
+korean,inform,null
+cheap restaurant in the east part of town,inform,null
+moderately restaurant,inform,null
+north american,inform,null
+catalanian,inform,null
+s e a f o o d,inform,null
+expensive restaurant asian food,inform,null
+moderately priced restaurant in the south part of town,inform,null
+id like a austrian restaurant in the south part of town,inform,null
+noise malaysian noise,inform,null
+an expensive italian restaurant,inform,null
+thare are different expensive restaurants in the east part of town,inform,null
+north american restaurant expensive,inform,null
 how about gastro pub type of food,inform,reqalts
-cheap restaurant east part of town,inform,0
-test food,inform,0
-restaurant west part of town japanese food,inform,0
-north town,inform,0
-christmas,inform,0
-city centre,inform,0
-is there one in the cheap price range,inform,0
-the south part,inform,0
-well i dont care about the price range,inform,0
-cross over,inform,0
-something moderately priced,inform,0
-moderate priced,inform,0
+cheap restaurant east part of town,inform,null
+test food,inform,null
+restaurant west part of town japanese food,inform,null
+north town,inform,null
+christmas,inform,null
+city centre,inform,null
+is there one in the cheap price range,inform,null
+the south part,inform,null
+well i dont care about the price range,inform,null
+cross over,inform,null
+something moderately priced,inform,null
+moderate priced,inform,null
 that information does not matter,inform,confirm
 can i get a moderate restaurant in the south part of town,inform,request
-id like to find a restaurant in the north part of town and it should serve greek food,inform,0
-uh gastropub food,inform,0
-vietnamese,inform,0
-uh korean food,inform,0
-okay um chinese then,inform,0
-is there anything in the cheap price range,inform,0
-i do not care,inform,0
-food,inform,0
-moderate restaurant catalan food,inform,0
-italian food in the south part of town,inform,0
-welsh food in the north part of town,inform,0
-east noise,inform,0
-korean food moderate price,inform,0
-i dont care the center part of town,inform,0
-hold on im working hold on gastro pub,inform,0
-im sorry i meant creative food,inform,0
-um indian food in the north part,inform,0
-like to find a restaurant in the east part of town and it should serve indian food,inform,0
-korean food in the north part of town,inform,0
-expensive mexican,inform,0
-gastropub,inform,0
-in the center part of town,inform,0
-noise any area,inform,0
-unintelligible part of town cheap restaurant,inform,0
-dont know,inform,0
+id like to find a restaurant in the north part of town and it should serve greek food,inform,null
+uh gastropub food,inform,null
+vietnamese,inform,null
+uh korean food,inform,null
+okay um chinese then,inform,null
+is there anything in the cheap price range,inform,null
+i do not care,inform,null
+food,inform,null
+moderate restaurant catalan food,inform,null
+italian food in the south part of town,inform,null
+welsh food in the north part of town,inform,null
+east noise,inform,null
+korean food moderate price,inform,null
+i dont care the center part of town,inform,null
+hold on im working hold on gastro pub,inform,null
+im sorry i meant creative food,inform,null
+um indian food in the north part,inform,null
+like to find a restaurant in the east part of town and it should serve indian food,inform,null
+korean food in the north part of town,inform,null
+expensive mexican,inform,null
+gastropub,inform,null
+in the center part of town,inform,null
+noise any area,inform,null
+unintelligible part of town cheap restaurant,inform,null
+dont know,inform,null
 help me decide what venues are available in the west part of town serving any ty,inform,request
-expensive east part of town,inform,0
-moderate restaurant seafood,inform,0
-expensive restaurant serving caribbean food,inform,0
-cheap in the west part of town,inform,0
-i dont care in the north part of town,inform,0
-restaurant in the east part of town international food,inform,0
-french food any french food,inform,0
-i dont care about the price,inform,0
-restaurant in west part of town serving corsica food,inform,0
-moderately priced restaurant halal food,inform,0
-restaurant in the south part of town serving turkish food,inform,0
-find me an expensive persian restaurant,inform,0
-restaurant east,inform,0
-chinese food thats moderately priced,inform,0
-british food north part of town,inform,0
-find moderately priced restaurant in the west part of town,inform,0
-east of town,inform,0
-in the east part of town,inform,0
-earetree mediterranean food,inform,0
-the north part of tow,inform,0
-id like a restaurant in the center with russian food,inform,0
-steak,inform,0
-gastropub moderate,inform,0
-polish,inform,0
-chinses,inform,0
-id like a restaurant in the north part of town serving swiss food,inform,0
-find me a moderately priced restaurant in the north part of town,inform,0
-singaporean,inform,0
-in the center part of,inform,0
-id like a international restaurant in the north part of town,inform,0
-restaurant in north part of town,inform,0
-id like a restaurant in any area,inform,0
-international type of food,inform,0
-a restaurant in the west part of town should serve crossover food,inform,0
-crossover,inform,0
-restaurant in center,inform,0
-breath a cheap restaurant in the north part of town,inform,0
-moderately priced restaurant in the east,inform,0
-a chinese,inform,0
-for a cheap restaurant in the east part of town,inform,0
-do you have an expensive restaurant,inform,0
-italian food instead,inform,0
-chinese food in the north part of town,inform,0
-restaurant moderate price,inform,0
-any range,inform,0
+expensive east part of town,inform,null
+moderate restaurant seafood,inform,null
+expensive restaurant serving caribbean food,inform,null
+cheap in the west part of town,inform,null
+i dont care in the north part of town,inform,null
+restaurant in the east part of town international food,inform,null
+french food any french food,inform,null
+i dont care about the price,inform,null
+restaurant in west part of town serving corsica food,inform,null
+moderately priced restaurant halal food,inform,null
+restaurant in the south part of town serving turkish food,inform,null
+find me an expensive persian restaurant,inform,null
+restaurant east,inform,null
+chinese food thats moderately priced,inform,null
+british food north part of town,inform,null
+find moderately priced restaurant in the west part of town,inform,null
+east of town,inform,null
+in the east part of town,inform,null
+earetree mediterranean food,inform,null
+the north part of tow,inform,null
+id like a restaurant in the center with russian food,inform,null
+steak,inform,null
+gastropub moderate,inform,null
+polish,inform,null
+chinses,inform,null
+id like a restaurant in the north part of town serving swiss food,inform,null
+find me a moderately priced restaurant in the north part of town,inform,null
+singaporean,inform,null
+in the center part of,inform,null
+id like a international restaurant in the north part of town,inform,null
+restaurant in north part of town,inform,null
+id like a restaurant in any area,inform,null
+international type of food,inform,null
+a restaurant in the west part of town should serve crossover food,inform,null
+crossover,inform,null
+restaurant in center,inform,null
+breath a cheap restaurant in the north part of town,inform,null
+moderately priced restaurant in the east,inform,null
+a chinese,inform,null
+for a cheap restaurant in the east part of town,inform,null
+do you have an expensive restaurant,inform,null
+italian food instead,inform,null
+chinese food in the north part of town,inform,null
+restaurant moderate price,inform,null
+any range,inform,null
 hi id like a moderately priced restaurant in the north,inform,hello
-in the center of town,inform,0
-veitnamese,inform,0
-danish,inform,0
-do you have chinese food,inform,0
-east part ot tow,inform,0
-european restaurant,inform,0
-restaurant and it should serve steak house food,inform,0
-a restaurant thats serving international food,inform,0
-chinese restaurant in the south part of town,inform,0
-lebanese food in the center of town,inform,0
-expensive korean food,inform,0
-a restaurant in the center,inform,0
-in the centre of town,inform,0
-find restaurant in north part of town serving asian food,inform,0
-how bout irish food noise,inform,0
-any type of food,inform,0
-moroccan,inform,0
-canapes food,inform,0
-west side,inform,0
-id like a cantonese resturant in the south part of town,inform,0
-noise um in the east part of town,inform,0
-the center of town,inform,0
-uh european food,inform,0
-do you have cuban food,inform,0
-restaurant south part of town international food,inform,0
-um north american food,inform,0
-hungarian food in the center of town,inform,0
-cheap restaurant portuguese,inform,0
-expensive fish restaurant,inform,0
-a restaurant with afghan food,inform,0
-expensive food in the south of town,inform,0
-north part of town serving gastropub food,inform,0
-a cheap restaurant in the west part of town,inform,0
-south,inform,0
-any price range,inform,0
-the restaurant,inform,0
-the east part of town,inform,0
-moderately priced international food,inform,0
-bask food,inform,0
-um in the south part of town and its cheap,inform,0
-restaurant there,inform,0
-uh cheap moderate,inform,0
-um dont care,inform,0
-dont matter,inform,0
-food an,inform,0
-missing sock,inform,0
-umh i dont care noise,inform,0
-turkish restaurant in the center of town,inform,0
-a restaurant in the center of town,inform,0
-id like a barbecue restaurant,inform,0
-want indian food,inform,0
-any area,inform,0
-portuguese food in the south part of town,inform,0
-eritrean food in the east part of town,inform,0
-moderately priced spanish restaurant,inform,0
-uh any type of food,inform,0
-scottish food,inform,0
-uh cheap restaurant in the north part of town,inform,0
-in the west part of town in the cheap price range,inform,0
-a restaurant in the south part of town serving italian food,inform,0
-thai,inform,0
-bistro,inform,0
-um an expensive,inform,0
-dont care east part of town,inform,0
-i dont care tv_noise,inform,0
-id like a cheap italian restaurant,inform,0
-breath do you have danish restaurants,inform,0
-do you have vietnamese food,inform,0
-chiquito,inform,0
-any any type,inform,0
-id like a portuguese restaurant,inform,0
-expensive restaurant east part of town,inform,0
-is there any expensive restaurant,inform,0
-german,inform,0
-north part of town north part of town,inform,0
-a chi ok lets look for chinese restaurant,inform,0
-american,inform,0
-expensive north american,inform,0
-um want to find a moderately priced restaurant in the,inform,0
-asian food,inform,0
-india,inform,0
-irish,inform,0
-is there a thai restaurant in the west of town,confirm,0
+in the center of town,inform,null
+veitnamese,inform,null
+danish,inform,null
+do you have chinese food,inform,null
+east part ot tow,inform,null
+european restaurant,inform,null
+restaurant and it should serve steak house food,inform,null
+a restaurant thats serving international food,inform,null
+chinese restaurant in the south part of town,inform,null
+lebanese food in the center of town,inform,null
+expensive korean food,inform,null
+a restaurant in the center,inform,null
+in the centre of town,inform,null
+find restaurant in north part of town serving asian food,inform,null
+how bout irish food noise,inform,null
+any type of food,inform,null
+moroccan,inform,null
+canapes food,inform,null
+west side,inform,null
+id like a cantonese resturant in the south part of town,inform,null
+noise um in the east part of town,inform,null
+the center of town,inform,null
+uh european food,inform,null
+do you have cuban food,inform,null
+restaurant south part of town international food,inform,null
+um north american food,inform,null
+hungarian food in the center of town,inform,null
+cheap restaurant portuguese,inform,null
+expensive fish restaurant,inform,null
+a restaurant with afghan food,inform,null
+expensive food in the south of town,inform,null
+north part of town serving gastropub food,inform,null
+a cheap restaurant in the west part of town,inform,null
+south,inform,null
+any price range,inform,null
+the restaurant,inform,null
+the east part of town,inform,null
+moderately priced international food,inform,null
+bask food,inform,null
+um in the south part of town and its cheap,inform,null
+restaurant there,inform,null
+uh cheap moderate,inform,null
+um dont care,inform,null
+dont matter,inform,null
+food an,inform,null
+missing sock,inform,null
+umh i dont care noise,inform,null
+turkish restaurant in the center of town,inform,null
+a restaurant in the center of town,inform,null
+id like a barbecue restaurant,inform,null
+want indian food,inform,null
+any area,inform,null
+portuguese food in the south part of town,inform,null
+eritrean food in the east part of town,inform,null
+moderately priced spanish restaurant,inform,null
+uh any type of food,inform,null
+scottish food,inform,null
+uh cheap restaurant in the north part of town,inform,null
+in the west part of town in the cheap price range,inform,null
+a restaurant in the south part of town serving italian food,inform,null
+thai,inform,null
+bistro,inform,null
+um an expensive,inform,null
+dont care east part of town,inform,null
+i dont care tv_noise,inform,null
+id like a cheap italian restaurant,inform,null
+breath do you have danish restaurants,inform,null
+do you have vietnamese food,inform,null
+chiquito,inform,null
+any any type,inform,null
+id like a portuguese restaurant,inform,null
+expensive restaurant east part of town,inform,null
+is there any expensive restaurant,inform,null
+german,inform,null
+north part of town north part of town,inform,null
+a chi ok lets look for chinese restaurant,inform,null
+american,inform,null
+expensive north american,inform,null
+um want to find a moderately priced restaurant in the,inform,null
+asian food,inform,null
+india,inform,null
+irish,inform,null
+is there a thai restaurant in the west of town,confirm,null
 does it serve cheap turkish food,confirm,inform
-do they serve korean food,confirm,0
+do they serve korean food,confirm,null
 uh yes id like an expensive restaurant that serves vegetarian food,affirm,inform
 uh yes im looking for a restaurant in any area that serves thai food,affirm,inform
 yes can i have malaysian food,affirm,inform
 yea thank you good bye,affirm,thankyou
 uh yes restaurant that serves danish food,affirm,inform
-ok yeah,affirm,0
+ok yeah,affirm,null
 yes can i have an expensive restaurant,affirm,inform
 uh yes can i find a moderately priced restaurant and it serve it should serve brazilian food,affirm,inform
-perfect,affirm,0
+perfect,affirm,null
 yeah a cheap restaurant serving international food,affirm,inform
-yea the area,affirm,0
+yea the area,affirm,null
 yea i want indian food,affirm,inform
 yes hi im looking for a restaurant in the north,affirm,inform
 yeah im in the west part of town and im looking for some vietnamese,affirm,inform
-right,affirm,0
-right in the south side of town though,affirm,0
-whats the phone whats the phone number,request,0
-whats the address noise,request,0
+right,affirm,null
+right in the south side of town though,affirm,null
+whats the phone whats the phone number,request,null
+whats the address noise,request,null
 can i have the address and the price range,request,inform
-noise address,request,0
+noise address,request,null
 how about the phone number,request,reqalts
-may i have the address and price range please,request,0
-whats the post code,request,0
-okay whats their address,request,0
-may i have the address,request,0
+whats the post code,request,null
+okay whats their address,request,null
 could you repeat the restaurant name,request,repeat
 can i have its phone number,request,inform
-could i have the address phone number and postcode,request,0
-and postcode,request,0
-whats the phone number again,request,0
-telephone number,request,0
+could i have the address phone number and postcode,request,null
+and postcode,request,null
+whats the phone number again,request,null
+telephone number,request,null
 can i have the address please,request,inform
-tell me the phone number,request,0
+tell me the phone number,request,null
 could you repeat the name,request,repeat
-could i have the address and phone number please,request,0
-okay ah wha whats the address,request,0
-and whats its phone number,request,0
-may i have the address please,request,0
-and the telephone number,request,0
+could i have the address and phone number please,request,null
+okay ah wha whats the address,request,null
+and whats its phone number,request,null
+and the telephone number,request,null
 okay can i have the address and phone number,request,inform
-address phone number and postcode,request,0
-whats its post code,request,0
-offer you the phone number and address,request,0
+address phone number and postcode,request,null
+whats its post code,request,null
+offer you the phone number and address,request,null
 where is it lcoated,request,confirm
-area train,request,0
-whats the address,request,0
-type of food do they serve,request,0
-cool whats the phone number,request,0
+area train,request,null
+whats the address,request,null
+type of food do they serve,request,null
+cool whats the phone number,request,null
 i need the address,request,inform
-okay um whats the price range,request,0
-the food of the venue,request,0
-could have its phone number,request,0
-and the phone number please,request,0
+okay um whats the price range,request,null
+the food of the venue,request,null
+could have its phone number,request,null
+and the phone number please,request,null
 can i have the address and phone number,request,inform
-may i have the phone number to the turkiesh,request,0
-may i have the phone number talking,request,0
 i want to know the address and the,request,inform
-do you got an address,request,0
-whats the price range again,request,0
-could have the phone number,request,0
-phone number area,request,0
-do you have a phone number,request,0
-okay and whats the price range,request,0
-address and phone number,request,0
-and whats the address,request,0
-can you give me the address please,request,0
+do you got an address,request,null
+whats the price range again,request,null
+could have the phone number,request,null
+phone number area,request,null
+do you have a phone number,request,null
+okay and whats the price range,request,null
+address and phone number,request,null
+and whats the address,request,null
+can you give me the address please,request,null
 and can i have the address,request,inform
-could i have their address and phone number,request,0
-could i have their address and phone number please,request,0
-noise what was their address again please,request,0
-could i have the address and phone number of the venue,request,0
-post number,request,0
-my i have the phone number,request,0
-um whats the price range,request,0
+could i have their address and phone number,request,null
+could i have their address and phone number please,request,null
+noise what was their address again please,request,null
+could i have the address and phone number of the venue,request,null
+post number,request,null
+my i have the phone number,request,null
+um whats the price range,request,null
 uh okay how about the address,request,reqalts
-type of food they serve,request,0
-the price range,request,0
-may i have the address and area,request,0
+type of food they serve,request,null
+the price range,request,null
 and can i have the address and phone number please,request,inform
-the phone number for bloomsbury,request,0
-type of food,request,0
-could i have the address and price range please,request,0
+the phone number for bloomsbury,request,null
+type of food,request,null
+could i have the address and price range please,request,null
 okay i need the phone number and address,request,inform
-alright whats the address,request,0
-and price range,request,0
+alright whats the address,request,null
+and price range,request,null
 and can i have the phone number and ah the area where it is,request,inform
 can i can i have the address and price,request,inform
-okay and ah whats the price range,request,0
-great could you tell me the address and phone number to that place,request,0
-area of venue,request,0
-post code,request,0
-may i get the phone number,request,0
-may i have the phone number and postcode of this ven,request,0
-phone number to that,request,0
+okay and ah whats the price range,request,null
+great could you tell me the address and phone number to that place,request,null
+area of venue,request,null
+post code,request,null
+phone number to that,request,null
 can i have the address phone number and the type of food,request,inform
-and their address,request,0
-do you have the post code,request,0
-could you give me the phone number and post code,request,0
-prices,request,0
-ah a phone number,request,0
-the address and post code,request,0
+and their address,request,null
+do you have the post code,request,null
+could you give me the phone number and post code,request,null
+prices,request,null
+ah a phone number,request,null
+the address and post code,request,null
 kay can i have the address phone number and the area,request,inform
-could i have the address and phone number,request,0
-uh phone number,request,0
-could i have the address please,request,0
-signature dish,request,0
-whats their post code,request,0
-may i have the address and postcode,request,0
+could i have the address and phone number,request,null
+uh phone number,request,null
+could i have the address please,request,null
+signature dish,request,null
+whats their post code,request,null
 uh i want the address of the or the address of the mediterranean food part,request,inform
-address phone number and post code,request,0
-the address and phone number,request,0
-do you have the phone number and post code,request,0
-give me the address phone number and price range,request,0
-may i have the phone number please,request,0
+address phone number and post code,request,null
+the address and phone number,request,null
+do you have the phone number and post code,request,null
+give me the address phone number and price range,request,null
 how about phone number,request,reqalts
-okay do you have the address for da vinci pizzeria,request,0
-okay and uh whats their phone number please,request,0
-the phone,request,0
+okay do you have the address for da vinci pizzeria,request,null
+okay and uh whats their phone number please,request,null
+the phone,request,null
 no thats post code,request,negate
-may i have the phone number and address please,request,0
-may i have their address please,request,0
-and can you tell me the post code,request,0
-expensive price range,request,0
-phone number and type of food,request,0
-could i have the address,request,0
+and can you tell me the post code,request,null
+expensive price range,request,null
+phone number and type of food,request,null
+could i have the address,request,null
 serves what,request,inform
-address,request,0
-okay whats the price range,request,0
-modern europene,null,0
-um hm,null,0
-of the venue,null,0
+address,request,null
+okay whats the price range,request,null
 what is,null,request
-none,null,0
-try again,null,0
-static,null,0
 system saying hello welcome,null,hello
-okay ill be there one sec,null,0
-new,null,0
-um what,null,0
-is there,null,0
-serving in,null,0
-holy cow,null,0
-oh my god,null,0
 okay ital,null,ack
-inaudible,null,0
-moder,null,0
 serves,null,inform
 how about uh,null,reqalts
 that serves viet,null,inform
-dont,null,0
-can you hear me,null,0
-post,null,0
-ring,null,0
-any thing else,null,0
-nothing,null,0
-aw give me the damn code,null,0
-expe,null,0
-gonville and caius college,null,0
-bad,null,0
-sorry,null,0
 who is it by,null,confirm
 okay,null,ack
-laugh you suck,null,0
 what is available in the ar,null,request
 can i have the noise,null,inform
-can you,null,0
 cut it thank you good bye,bye,thankyou
 great thank you goodbye,bye,thankyou
 good bye thank you good bye,bye,thankyou
 thank you good bye crosstalk,bye,thankyou
 are there any barbecue restaurants,reqalts,inform
-can i try another one,reqalts,0
-do you have another,reqalts,0
-noise is there anything else,reqalts,0
-give me something else,reqalts,0
-breath is there anything else,reqalts,0
-how bout the center part of town,reqalts,0
+can i try another one,reqalts,null
+do you have another,reqalts,null
+noise is there anything else,reqalts,null
+give me something else,reqalts,null
+breath is there anything else,reqalts,null
+how bout the center part of town,reqalts,null
 can i have another option,reqalts,inform
-next one,reqalts,0
+next one,reqalts,null
 what is available,reqalts,request
-is there a restaurant,reqalts,0
-is there any restaurant,reqalts,0
-is there a restaurant serving british food,reqalts,0
+is there a restaurant,reqalts,null
+is there any restaurant,reqalts,null
+is there a restaurant serving british food,reqalts,null
 is there a restaurant in the north part of town that serves unusual food,reqalts,inform
 just give me one more,reqalts,reqmore
-ah how bout an expensive one,reqalts,0
+ah how bout an expensive one,reqalts,null
 is there a restaurant in the north part of town that serves indian food,reqalts,inform
 how about a restaurant that serves international food,reqalts,inform
 how about a moderately priced restaurant that serves spanish,reqalts,inform
-could you give me another venue,reqalts,0
+could you give me another venue,reqalts,null
 is there anything else that serves turkish,reqalts,inform
 is there a restaurant that serves european food,reqalts,inform
-what else,reqalts,0
-dont care is there anything else,reqalts,0
+what else,reqalts,null
+dont care is there anything else,reqalts,null
 is there anything that serves north american,reqalts,inform
 no im looking for a cheap price range in the east part of town,negate,inform
 no i am looking for a vietnamese restaurant,negate,inform
@@ -416,7 +375,7 @@ hi im looking for a moderately priced restaurant,hello,inform
 hi im looking for a restaurant,hello,inform
 hi i am looking for a moderately priced restaurant in the east part of town,hello,inform
 hi im looking for a restaurant with japanese food,hello,inform
-halo,hello,0
+halo,hello,null
 hi im looking for cuban food,hello,inform
 hello im looking for a cheap restaurant in the west part of town,hello,inform
 hi im looking for a restaurant in the,hello,inform
