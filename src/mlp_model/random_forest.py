@@ -15,15 +15,12 @@ from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, r
 
 
 # Import training data without duplicates
-train_data_no_dupes = pd.read_csv("../../data/splits/train_dialog_acts_no_dupes.csv")
+train_data_no_dupes = pd.read_csv("data/splits/train_dialog_acts_no_dupes.csv")
 
 # Import training data with duplicates
-train_data = pd.read_csv("../../data/splits/train_dialog_acts.csv")
+train_data = pd.read_csv("data/splits/train_dialog_acts.csv")
 
-def Process_Data(DATA):
-
-    df = DATA
-    
+def process_data(df):    
     # categorize the label data as numerical data, (null = -1), using pd.factorize
     df['label'] = pd.factorize(df['label'])[0]
 
@@ -35,28 +32,28 @@ def Process_Data(DATA):
     # From the matrix we can build the bag of words representation
     # we use the words as column names
     bag_of_words = bag_of_words_matrix.toarray()
-    features = vectorizer.get_feature_names()
+    features = vectorizer.get_feature_names_out()
     training_data = pd.DataFrame(data=bag_of_words, columns=features)
     
     # Organize the data into the featuress (X) and target (y)
-    X = training_data
+    x = training_data
     y = df['label']
     
     # Split the data into training and test sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state = 42)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.15, random_state = 42)
     
-    return X_train, X_test, y_train, y_test
+    return x_train, x_test, y_train, y_test
 
-def Random_Forest_Classifier(X, y):
+def fit_random_forest(x, y):
     # X being the features and y the target
     
     # fit the model to the data
     rf = RandomForestClassifier(random_state = 42)
-    rf.fit(X, y)
+    rf.fit(x, y)
     
     return rf
 
-def Optimizing_Hyperparamters(X, y, searching = True):
+def optimize_hyperparameters(x, y, searching = True):
     
     
     # Number of trees
@@ -95,7 +92,7 @@ def Optimizing_Hyperparamters(X, y, searching = True):
     # fit the model to the given training data if searching is set to true
     # if not set to searching we use the previously found best parameters
     if searching:
-        rf_random.fit(X, y)
+        rf_random.fit(x, y)
     else: 
         # From function Optimizing_Hyperparamters we found the best parameters 
         # by closing in on the best parameters over a series of optimizations
@@ -103,7 +100,7 @@ def Optimizing_Hyperparamters(X, y, searching = True):
                                     min_samples_split = 8, min_samples_leaf = 1, 
                                     max_features = 'sqrt', max_depth = None,
                                     bootstrap = False)
-        rf.fit(X,y)
+        rf.fit(x,y)
         return rf
     
     print("Best parameters found:\n", rf_random.best_params_)
@@ -117,25 +114,25 @@ best_parameters =  {'n_estimators': 700, 'min_samples_split': 8,
                     'min_samples_leaf': 1, 'max_features': 'sqrt',
                     'max_depth': None, 'bootstrap': False}
     
-def Accuracy_Test(DATA, FOREST = False, OPTIMIZED_FOREST = False):
+def test_accuracy(DATA, FOREST = False, OPTIMIZED_FOREST = False):
     
     # Get the training data
-    X_train, X_test, y_train, y_test = Process_Data(DATA)
+    x_train, x_test, y_train, y_test = process_data(DATA)
     
     # Train the model, currently this is only the (optimized) forest model
     if FOREST:
         # Random Forest model trained on the data
-        model = Random_Forest_Classifier(X_train, y_train)
+        model = fit_random_forest(x_train, y_train)
         chosen_model = "RandomForestClassifier"
     elif OPTIMIZED_FOREST:
-        model = Optimizing_Hyperparamters(X_train, y_train, False)
+        model = optimize_hyperparameters(x_train, y_train, False)
         chosen_model = "OptimizedRandomForestClassifier"
     else:
         print("No valid model selected")
         return
     
     # predict values 
-    y_pred = model.predict(X_test)
+    y_pred = model.predict(x_test)
     
     # test the accuracy
     accuracy = accuracy_score(y_test, y_pred)
@@ -144,13 +141,13 @@ def Accuracy_Test(DATA, FOREST = False, OPTIMIZED_FOREST = False):
 
 if __name__ == '__main__':
     print("Without duplicates")
-    Accuracy_Test(train_data_no_dupes, FOREST= 1)
+    test_accuracy(train_data_no_dupes, FOREST= 1)
     
     print("\nWithout duplicates and optimized")
-    Accuracy_Test(train_data_no_dupes, OPTIMIZED_FOREST= 1)
+    test_accuracy(train_data_no_dupes, OPTIMIZED_FOREST= 1)
     
     # print("\nWith duplicates")
-    # Accuracy_Test(train_data, FOREST = 1)
+    # test_accuracy(train_data, FOREST = 1)
     
 
 
