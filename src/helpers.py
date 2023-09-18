@@ -1,4 +1,6 @@
+import string
 from nltk.corpus import stopwords
+
 import csv
 
 def load_csv_data(filepath):
@@ -38,3 +40,15 @@ def remove_stopwords(data_dict):
                            for entry in entries]
 
     return data_dict
+
+def prep_user_input(user_input: str):
+    # Remove stopwords
+    user_input = " ".join([word for word in user_input.split() if word not in stopwords.words('english')])
+    
+    # Remove punctuation
+    user_input = user_input.translate(str.maketrans('', '', string.punctuation))
+    
+    # Convert to lowercase
+    user_input = user_input.lower()
+    
+    return user_input
