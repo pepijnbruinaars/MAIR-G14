@@ -1,10 +1,10 @@
-from dialog_manager import DialogManager
+from dialog_manager import DialogManager, DialogConfig
 
 
 def main():
     print("Hello World!")
     
-    dialog_config = {
+    dialog_config: DialogConfig = {
         "intent_model": "RandomForest",
         "verbose": True
     }

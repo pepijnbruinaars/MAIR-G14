@@ -10,8 +10,11 @@ class DialogConfig(TypedDict):
     verbose: bool # Whether to print out debug information
 
 class DialogManager():
-    # Init
-    def __init__(self, dialog_config):
+    """
+    DialogManager class, which can be called to start a new conversation with the bot
+    """
+    
+    def __init__(self, dialog_config: DialogConfig):
         self.dialog_config = dialog_config
         self.done = False
         self.retrieved_info = {}
@@ -34,7 +37,6 @@ class DialogManager():
         
         print("You said: " + user_input)
         alternatives = self.get_levenshtein_alternatives(user_input, self.options)
-        print(alternatives)
         if alternatives:
             print("Did you mean one of the following?")
             self.show_matches(alternatives)
