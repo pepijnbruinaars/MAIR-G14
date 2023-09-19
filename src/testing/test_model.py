@@ -1,6 +1,6 @@
 import csv
 from helpers import load_csv_data
-from keyword_matching.keyword_matching import match_sentence
+from baselines.keyword_matching import match_sentence
 
 
 def test_models():
@@ -8,9 +8,9 @@ def test_models():
     # Load data
     test_data_dupes = load_csv_data("data/splits/test_dialog_acts.csv")
     test_data_no_dupes = load_csv_data("data/splits/test_dialog_acts_no_dupes.csv")
-    
+
     # TODO: Test majority model
-    
+
     # Test keyword model
     for data in [test_data_dupes, test_data_no_dupes]:
         correct_count = 0
@@ -27,14 +27,15 @@ def test_models():
                     prediction = "null"
                 # Check if prediction matches label
                 if prediction == label:
-                    # print(f"Keyword model predicted {prediction} for \"{sentence}\" when it should have predicted {label}")
+                    # print(f"Keyword model predicted {prediction} for \"{sentence}\"
+                    # when it should have predicted {label}")
                     correct_count += 1
                 else:
                     incorrect.append((sentence, label, prediction))
-                    
+
         # Save incorrect predictions to csv
-        with open("data/results/incorrect_predictions.csv", 'w') as csv_file:
-            csv_writer = csv.writer(csv_file, delimiter=',')
+        with open("data/results/incorrect_predictions.csv", "w") as csv_file:
+            csv_writer = csv.writer(csv_file, delimiter=",")
             csv_writer.writerow(["sentence", "label", "prediction"])
             for incorrect_prediction in incorrect:
                 csv_writer.writerow(incorrect_prediction)
@@ -46,7 +47,7 @@ def test_models():
             else:
                 prediction_count[prediction] = 1
         print(f"Prediction counts: {prediction_count}")
-        
+
     # TODO: Test tree model
     # TODO: Test neural model
     return
