@@ -76,3 +76,31 @@ class DialogManager():
             if match["option"] is not None:
                 match["option"] = match["option"][0].upper() + match["option"][1:]
                 print(match["option"])
+
+    def retrieve_restaurant(self, preferences): # function to
+        data = pd.read_csv("data/original/restaurant_info.csv")
+        pref_type = preferences["type"]
+        pref_area = preferences["area"]
+        pref_price = preferences["price_range"]
+
+        restaurant_choice = None
+        other_options = None
+
+        if pref_type is not None:
+            data = data[data["food"] == pref_type]
+        if pref_area is not None:
+            data = data[data["area"] == pref_area]
+        if pref_price is not None:
+            data = data[data["pricerange"] == pref_price]
+
+        if data.empty:  # if no restaurant available, function returns -1
+            raise LookupError("No restaurant found!")
+        elif len(data) == 1:
+            restaurant_choice = data
+        elif len(data) > 1:
+            restaurant_choice = data.sample(n=1)
+            restaurant_choice_name = restaurant_choice["restaurantname"].iloc[0]
+            other_options = data[data["restaurantname"] != restaurant_choice_name]
+
+        return restaurant_choice, other_options
+
