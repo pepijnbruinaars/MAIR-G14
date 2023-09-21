@@ -1,5 +1,5 @@
 import random
-from typing import TypedDict, list
+from typing import TypedDict
 from Levenshtein import distance
 import joblib
 
@@ -41,35 +41,46 @@ class DialogManager:
         self.options = ["Danish", "Spanish", "Italian"]
         self.intent_classifier = joblib.load("models/optimized_random_forest.joblib")
 
+    def __repr__(self):
+        return f"DialogManager({self.dialog_config})"
+
     # -------------- Interface methods --------------
     def __handle_input(self, user_input):
         # Process user input
         prepped_user_input = prep_user_input(user_input)
-        self.__add_message(None, prepped_user_input, "user")
 
         # Check if user wants to exit
         if prepped_user_input == "exit":
+            self.__respond("Goodbye! \N{waving hand sign}")
+            print(self.message_history)
             self.done = True
             return
 
         # Check user intent
         intent = self.__get_intent(prepped_user_input)
+        self.__add_message(intent, prepped_user_input, "user")
 
-        self.__respond()
+        # Logging for debugging
+        if self.dialog_config["verbose"]:
+            print(f"Intent: {intent}")
+            print(f"User input: {prepped_user_input}")
+
+        self.__respond(f"Your intent is {intent}?")
 
         # Check if user made a typo
-        alternatives = self.get_levenshtein_alternatives(
+        alternatives = self.__get_levenshtein_alternatives(
             prepped_user_input, self.options
         )
         if alternatives:
             self.__respond("Did you mean one of the following?")
-            self.show_matches(alternatives)
+            self.__show_matches(alternatives)
             return
 
     def __respond(self, input):
+        self.__add_message(None, input, "bot")
         print(f"\N{robot face} Bot: {input}")
 
-    # -------------- Internal methods --------------
+    # -------------- Public methods --------------
     def start_dialog(self):
         self.__respond(self.message_templates["welcome"])
         while not self.done:
@@ -78,6 +89,7 @@ class DialogManager:
             user_input = input()
             self.__handle_input(user_input)
 
+    # -------------- Internal methods --------------
     def __get_intent(self, prepped_user_input):
         # Pre-process user input
         return predict_single_input(prepped_user_input)
@@ -92,7 +104,7 @@ class DialogManager:
         )
 
     # -------------- Helper methods --------------
-    def get_levenshtein_alternatives(self, word, options):
+    def __get_levenshtein_alternatives(self, word, options):
         matches = []
         options_copy = options.copy()  # Copy options to avoid mutating original list
         options_copy = [
@@ -120,7 +132,7 @@ class DialogManager:
         matches.sort(key=lambda x: x["distance"])
         return matches
 
-    def show_matches(self, matches):
+    def __show_matches(self, matches):
         for match in matches:
             # Upper case first letter of option
             if match["option"] is not None:

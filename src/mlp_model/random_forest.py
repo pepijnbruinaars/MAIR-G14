@@ -74,7 +74,7 @@ def predict_single_input(input):
     # Get the training data
     labels = pd.factorize(train_data_no_dupes["label"])[1]
 
-    (x_train,) = process_data(train_data_no_dupes)
+    x_train, _, _, _ = process_data(train_data_no_dupes)
 
     # Load the model
     model = joblib.load("models/optimized_random_forest.joblib")
