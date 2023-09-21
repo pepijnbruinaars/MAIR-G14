@@ -47,12 +47,14 @@ def remove_stopwords(data_dict):
 
 def prep_user_input(user_input: str):
     # Remove stopwords
-    user_input = " ".join([word for word in user_input.split() if word not in stopwords.words('english')])
-    
+    user_input = " ".join(
+        [word for word in user_input.split() if word not in stopwords.words("english")]
+    )
+
     # Remove punctuation
-    user_input = user_input.translate(str.maketrans('', '', string.punctuation))
-    
+    user_input = user_input.translate(str.maketrans("", "", string.punctuation))
+
     # Convert to lowercase
     user_input = user_input.lower()
-    
+
     return user_input
