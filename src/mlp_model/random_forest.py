@@ -74,6 +74,7 @@ def predict_single_input(input):
     # Get the training data
     labels = pd.factorize(train_data_no_dupes["label"])[1]
 
+    # load the vectorizer from data
     _, _, _, _, vectorizer = process_data(train_data_no_dupes)
 
     # Load the model
@@ -102,8 +103,11 @@ def predict_single_input(input):
     # missing_words = list(set(input_columns) - set(training_columns))
 
     # # Remove the missing words from the input data
+
+
+    # Transform the input with the data to a BoW representation with the vocab
+    # of the training data, ignores out of vocab words
     input_data = vectorizer.transform(input).toarray()
-    # .drop(missing_words, axis=1)
 
     # Predict the intent of the input
     y_pred = model.predict(input_data)
