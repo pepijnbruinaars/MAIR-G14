@@ -1,15 +1,22 @@
 import random
-from typing import TypedDict
+from typing import TypedDict, list
 from Levenshtein import distance
 import joblib
 
 from helpers import prep_user_input
+from mlp_model.random_forest import predict_single_input
 
 
 # DialogConfig type
 class DialogConfig(TypedDict):
     intent_model: str  # Type of intent model, default is RandomForest
     verbose: bool  # Whether to print out debug information
+
+
+class Message(TypedDict):
+    classified_intent: str | None
+    text: str
+    sender: str
 
 
 class DialogManager:
@@ -21,22 +28,36 @@ class DialogManager:
     def __init__(self, dialog_config: DialogConfig):
         self.dialog_config = dialog_config
         self.done = False
-        self.retrieved_info = {}
+        self.message_history: list[Message] = []
         self.message_templates = {
             "welcome": "Hello, I am a restaurant recommender chatbot \N{rocket}. How can I help you?",
             # "confirmfoodtype": f"",
+        }
+        self.stored_preferences = {
+            "food_type": None,
+            "price_range": None,
+            "area": None,
         }
         self.options = ["Danish", "Spanish", "Italian"]
         self.intent_classifier = joblib.load("models/optimized_random_forest.joblib")
 
     # -------------- Interface methods --------------
     def __handle_input(self, user_input):
+        # Process user input
         prepped_user_input = prep_user_input(user_input)
+        self.__add_message(None, prepped_user_input, "user")
+
+        # Check if user wants to exit
         if prepped_user_input == "exit":
             self.done = True
             return
 
-        self.__respond("Intent: " + self.__get_intent(prepped_user_input))
+        # Check user intent
+        intent = self.__get_intent(prepped_user_input)
+
+        self.__respond()
+
+        # Check if user made a typo
         alternatives = self.get_levenshtein_alternatives(
             prepped_user_input, self.options
         )
@@ -54,13 +75,21 @@ class DialogManager:
         while not self.done:
             # Get the user input on the same line as the prompt
             print("\r\N{bust in silhouette} User: ", end="")
-            user_input = input()  # Get user input
-            # print("\033[A \033[A")  # Clear user input
+            user_input = input()
             self.__handle_input(user_input)
 
     def __get_intent(self, prepped_user_input):
         # Pre-process user input
-        return (prepped_user_input)[0]
+        return predict_single_input(prepped_user_input)
+
+    def __add_message(self, intent, text, sender):
+        self.message_history.append(
+            {
+                "classified_intent": intent,
+                "text": text,
+                "sender": sender,
+            }
+        )
 
     # -------------- Helper methods --------------
     def get_levenshtein_alternatives(self, word, options):
@@ -74,8 +103,12 @@ class DialogManager:
         # Loop through options and calculate levenshtein distance
         for option in options_copy:
             dist = distance(word, option)
+            # If distance is 0, then we have a perfect match
+            if dist == 0:
+                return None
+
+            # If distance is less than 2, then we have a match
             if dist <= 2:
-                # Store option and distance in dict
                 matches.append(
                     {
                         "option": option,
@@ -92,4 +125,4 @@ class DialogManager:
             # Upper case first letter of option
             if match["option"] is not None:
                 match["option"] = match["option"][0].upper() + match["option"][1:]
-                print(match["option"])
+                print("\t- " + match["option"] + "?")

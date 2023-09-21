@@ -31,13 +31,15 @@ train_data = pd.read_csv("data/splits/train_dialog_acts.csv")
 
 
 def process_data(df):
+    # copy the dataframe to avoid mutating the original
+    df_copy = df.copy()
     # categorize the label data as numerical data, (null = -1), using pd.factorize
-    df["label"] = pd.factorize(df["label"])[0]
+    df_copy["label"] = pd.factorize(df_copy["label"])[0]
 
     # Use the Sklearn method of countVectorizer to make a matrix of word counts
     # this method also tokenizes implicitly
     vectorizer = CountVectorizer()
-    bag_of_words_matrix = vectorizer.fit_transform(df["text"])
+    bag_of_words_matrix = vectorizer.fit_transform(df_copy["text"])
 
     # From the matrix we can build the bag of words representation
     # we use the words as column names
@@ -48,7 +50,7 @@ def process_data(df):
     training_data.to_csv("data/splits/rf_training_data.csv")
     # Organize the data into the featuress (X) and target (y)
     x = training_data
-    y = df["label"]
+    y = df_copy["label"]
 
     # Split the data into training and test sets
     x_train, x_test, y_train, y_test = train_test_split(
@@ -56,6 +58,57 @@ def process_data(df):
     )
 
     return x_train, x_test, y_train, y_test
+
+
+def predict_single_input(input):
+    """
+    Predict the intent of a single input string using the model.
+    We have to check if the input contains words that are not in the training data, and
+    ignore just those words if that's the case.
+    Afterwards, we can use the model to predict the intent of the input, and we return
+    the label of the intent.
+
+    Args:
+        input (__str__): The input string to predict the intent of.
+    """
+    # Get the training data
+    labels = pd.factorize(train_data_no_dupes["label"])[1]
+
+    (x_train,) = process_data(train_data_no_dupes)
+
+    # Load the model
+    model = joblib.load("models/optimized_random_forest.joblib")
+
+    # Get the bag of words representation of the training set
+    vectorizer = CountVectorizer()
+    bag_of_words_matrix = vectorizer.fit_transform(x_train)
+
+    # Get the bag of words representation of the input
+    bag_of_words_matrix = vectorizer.transform([input])
+
+    # From the matrix we can build the bag of words representation
+    # we use the words as column names
+    bag_of_words = bag_of_words_matrix.toarray()
+    features = vectorizer.get_feature_names_out()
+    input_data = pd.DataFrame(data=bag_of_words, columns=features)
+
+    # Get the columns of the input data
+    input_columns = input_data.columns
+
+    # Get the columns of the training data
+    training_columns = x_train.columns
+
+    # Find the words in the input that are not in the training data
+    missing_words = list(set(input_columns) - set(training_columns))
+
+    # Remove the missing words from the input data
+    input_data = input_data.drop(missing_words, axis=1)
+
+    # Predict the intent of the input
+    y_pred = model.predict(input_data)
+
+    # Return the label of the intent
+    return labels[y_pred[0]]
 
 
 def fit_random_forest(x, y):
