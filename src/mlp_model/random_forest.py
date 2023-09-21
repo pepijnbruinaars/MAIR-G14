@@ -61,7 +61,7 @@ def process_data(df):
 
     # With the bag of words represenation build a dataframe with features as
     # colomns 
-    features = vectorizer.get_feature_names_out()
+    features = vectorizer.get_feature_names()
     training_data = pd.DataFrame(data=bag_of_words, columns=features)
     
     
