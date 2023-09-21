@@ -17,7 +17,7 @@ information = pd.read_csv("../data/restaurant_info.csv")
 
 area = ['west', 'north', 'south', 'centre', 'east']
 food = ['moderate', 'expensive', 'cheap']
-price = ['british', 'modern european', 'italian', 'romanian', 'seafood',
+price = ['modern european', 'italian', 'romanian', 'seafood',
        'chinese', 'steakhouse', 'asian oriental', 'french', 'portuguese',
        'indian', 'spanish', 'european', 'vietnamese', 'korean', 'thai',
        'moroccan', 'swiss', 'fusion', 'gastropub', 'tuscan',
@@ -29,15 +29,21 @@ price = ['british', 'modern european', 'italian', 'romanian', 'seafood',
 
 def extract_preference(input_string : str):
     
+    # make sure input is in lower case
+    input_string = input_string.lower()
+    
+    # First entry
+    food_regex = "british"
+    
+    # for every other entry add the option of food
+    for i in price:
+        food_regex = food_regex + "|" + i 
+    
+    # match the possible preferences to the input
     area_match = re.search(r"west|north|south|centre|east", input_string)
     food_match = re.search(r"moderate|expensive|cheap", input_string)
-    price_match = 1
-    food_regex = ""
-    
-    for i in price:
-        food_regex = food_regex.append(i + "|")
-        
-    print(food_regex)
+    price_match = re.search(rf"{food_regex}", input_string)
+
     
     if food_match:
         print(food_match.group())
@@ -45,6 +51,9 @@ def extract_preference(input_string : str):
     if area_match:
         print(area_match.group())
     
+    if price_match:
+        print(price_match.group())
+        
     return area_match.group()
     
     
@@ -52,4 +61,4 @@ def extract_preference(input_string : str):
     
     
 if __name__ == "__main__":
-    extract_preference("I want a restaurant that is in the middle or centre of the city")
+    extract_preference("I want a restaurant that italian is in the middle or centre of the city")
