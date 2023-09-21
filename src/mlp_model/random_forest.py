@@ -4,11 +4,14 @@ Created on Tue Sep 12 14:32:40 2023
 
 @author: 13vic
 """
+import joblib
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.feature_extraction.text import CountVectorizer
 import pandas as pd
+
 # import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+
 # from nltk.tokenize import word_tokenize
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
@@ -41,7 +44,8 @@ def process_data(df):
     bag_of_words = bag_of_words_matrix.toarray()
     features = vectorizer.get_feature_names_out()
     training_data = pd.DataFrame(data=bag_of_words, columns=features)
-
+    # Save training data to csv
+    training_data.to_csv("data/splits/rf_training_data.csv")
     # Organize the data into the featuress (X) and target (y)
     x = training_data
     y = df["label"]
@@ -144,9 +148,13 @@ def test_accuracy(DATA, FOREST=False, OPTIMIZED_FOREST=False):
     if FOREST:
         # Random Forest model trained on the data
         model = fit_random_forest(x_train, y_train)
+        # Save model to models folder
+        joblib.dump(model, "models/random_forest.joblib")
         chosen_model = "RandomForestClassifier"
     elif OPTIMIZED_FOREST:
         model = optimize_hyperparameters(x_train, y_train, False)
+        # Save model to models folder
+        joblib.dump(model, "models/optimized_random_forest.joblib")
         chosen_model = "OptimizedRandomForestClassifier"
     else:
         print("No valid model selected")
