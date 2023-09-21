@@ -7,6 +7,25 @@ from helpers import prep_user_input
 from mlp_model.random_forest import predict_single_input
 
 
+# Enum for all intent types
+class IntentType:
+    ACK = "acknowledgment"
+    AFFIRM = "affirm"
+    BYE = "bye"
+    CONFIRM = "confirm"
+    DENY = "deny"
+    HELLO = "hello"
+    INFORM = "inform"
+    NEGATE = "negate"
+    NULL = "null"
+    REPEAT = "repeat"
+    REQALTS = "reqalts"
+    REQMORE = "reqmore"
+    REQUEST = "request"
+    RESTART = "restart"
+    THANKYOU = "thankyou"
+
+
 # DialogConfig type
 class DialogConfig(TypedDict):
     intent_model: str  # Type of intent model, default is RandomForest
@@ -14,7 +33,7 @@ class DialogConfig(TypedDict):
 
 
 class Message(TypedDict):
-    classified_intent: str | None
+    classified_intent: IntentType | None
     text: str
     sender: str
 
