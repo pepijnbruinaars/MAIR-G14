@@ -49,16 +49,14 @@ class DialogManager:
         # Process user input
         prepped_user_input = prep_user_input(user_input)
 
-        # Check if user wants to exit
-        if prepped_user_input == "exit":
-            self.__respond("Goodbye! \N{waving hand sign}")
-            print(self.message_history)
-            self.done = True
-            return
-
         # Check user intent
         intent = self.__get_intent(prepped_user_input)
         self.__add_message(intent, prepped_user_input, "user")
+
+        # Check if user wants to exit
+        if prepped_user_input == "exit":
+            self.__handle_exit()
+            return
 
         # Logging for debugging
         if self.dialog_config["verbose"]:
@@ -79,6 +77,16 @@ class DialogManager:
     def __respond(self, input):
         self.__add_message(None, input, "bot")
         print(f"\N{robot face} Bot: {input}")
+
+    def __print_message_history(self):
+        for message in self.message_history:
+            print(message)
+
+    def __handle_exit(self):
+        self.__respond("Goodbye! \N{waving hand sign}")
+        if self.dialog_config["verbose"]:
+            self.__print_message_history()
+        self.done = True
 
     # -------------- Public methods --------------
     def start_dialog(self):
