@@ -27,8 +27,29 @@ price = ['british', 'modern european', 'italian', 'romanian', 'seafood',
 
 
 
-def extract_prefrence(input_string : str):
+def extract_preference(input_string : str):
     
-    i
-    print("hello world")
+    area_match = re.search(r"west|north|south|centre|east", input_string)
+    food_match = re.search(r"moderate|expensive|cheap", input_string)
+    price_match = 1
+    food_regex = ""
     
+    for i in price:
+        food_regex = food_regex.append(i + "|")
+        
+    print(food_regex)
+    
+    if food_match:
+        print(food_match.group())
+        
+    if area_match:
+        print(area_match.group())
+    
+    return area_match.group()
+    
+    
+    
+    
+    
+if __name__ == "__main__":
+    extract_preference("I want a restaurant that is in the middle or centre of the city")
