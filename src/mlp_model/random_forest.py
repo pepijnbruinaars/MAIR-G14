@@ -57,7 +57,7 @@ def process_data(df):
         x, y, test_size=0.15, random_state=42
     )
 
-    return x_train, x_test, y_train, y_test
+    return x_train, x_test, y_train, y_test, vectorizer
 
 
 def predict_single_input(input):
@@ -74,35 +74,36 @@ def predict_single_input(input):
     # Get the training data
     labels = pd.factorize(train_data_no_dupes["label"])[1]
 
-    x_train, _, _, _ = process_data(train_data_no_dupes)
+    _, _, _, _, vectorizer = process_data(train_data_no_dupes)
 
     # Load the model
     model = joblib.load("models/optimized_random_forest.joblib")
 
     # Get the bag of words representation of the training set
-    vectorizer = CountVectorizer()
-    bag_of_words_matrix = vectorizer.fit_transform(x_train)
+    # vectorizer = CountVectorizer()
+    # bag_of_words_matrix = vectorizer.fit_transform(x_train)
 
-    # Get the bag of words representation of the input
-    bag_of_words_matrix = vectorizer.transform([input])
+    # # Get the bag of words representation of the input
+    # bag_of_words_matrix = vectorizer.transform([input])
 
-    # From the matrix we can build the bag of words representation
-    # we use the words as column names
-    bag_of_words = bag_of_words_matrix.toarray()
-    features = vectorizer.get_feature_names_out()
-    input_data = pd.DataFrame(data=bag_of_words, columns=features)
+    # # From the matrix we can build the bag of words representation
+    # # we use the words as column names
+    # bag_of_words = bag_of_words_matrix.toarray()
+    # features = vectorizer.get_feature_names_out()
+    # input_data = pd.DataFrame(data=bag_of_words, columns=features)
 
-    # Get the columns of the input data
-    input_columns = input_data.columns
+    # # Get the columns of the input data
+    # input_columns = input_data.columns
 
-    # Get the columns of the training data
-    training_columns = x_train.columns
+    # # Get the columns of the training data
+    # training_columns = x_train.columns
 
-    # Find the words in the input that are not in the training data
-    missing_words = list(set(input_columns) - set(training_columns))
+    # # Find the words in the input that are not in the training data
+    # missing_words = list(set(input_columns) - set(training_columns))
 
-    # Remove the missing words from the input data
-    input_data = input_data.drop(missing_words, axis=1)
+    # # Remove the missing words from the input data
+    input_data = vectorizer.transform(input).toarray()
+    # .drop(missing_words, axis=1)
 
     # Predict the intent of the input
     y_pred = model.predict(input_data)
@@ -122,47 +123,57 @@ def fit_random_forest(x, y):
 
 
 def optimize_hyperparameters(x, y, searching=True):
-    # Number of trees
-    n_estimators = [i for i in range(300, 1000, 100)]
-    # Number of features to consider at every split
-    max_features = ["sqrt"]
-    # Maximum depth of trees
-    max_depth = [i for i in range(40, 100, 20)]
-    max_depth.append(None)
-    # Minimum number of samples to split a node
-    min_samples_split = [4, 8]
-    # Minimum number of samples at each leaf node
-    min_samples_leaf = [1]
-    # Method of selecting samples for training each tree
-    bootstrap = [False]
-
-    random_grid = {
-        "n_estimators": n_estimators,
-        "max_features": max_features,
-        "max_depth": max_depth,
-        "min_samples_split": min_samples_split,
-        "min_samples_leaf": min_samples_leaf,
-        "bootstrap": bootstrap,
-    }
-
-    rf = RandomForestClassifier(random_state=42)
-
-    # We randomly search parameter space for optimal values.
-    # With 3 cross-validation and 100 attempts
-    rf_random = RandomizedSearchCV(
-        estimator=rf,
-        param_distributions=random_grid,
-        n_iter=100,
-        cv=3,
-        verbose=2,
-        random_state=42,
-        n_jobs=-1,
-    )
-
+    
     # fit the model to the given training data if searching is set to true
     # if not set to searching we use the previously found best parameters
     if searching:
+        
+    
+        # Number of trees
+        n_estimators = [i for i in range(300, 1000, 100)]
+        # Number of features to consider at every split
+        max_features = ["sqrt"]
+        # Maximum depth of trees
+        max_depth = [i for i in range(40, 100, 20)]
+        max_depth.append(None)
+        # Minimum number of samples to split a node
+        min_samples_split = [4, 8]
+        # Minimum number of samples at each leaf node
+        min_samples_leaf = [1]
+        # Method of selecting samples for training each tree
+        bootstrap = [False]
+    
+        random_grid = {
+            "n_estimators": n_estimators,
+            "max_features": max_features,
+            "max_depth": max_depth,
+            "min_samples_split": min_samples_split,
+            "min_samples_leaf": min_samples_leaf,
+            "bootstrap": bootstrap,
+        }
+    
+        rf = RandomForestClassifier(random_state=42)
+    
+        # We randomly search parameter space for optimal values.
+        # With 3 cross-validation and 100 attempts
+        rf_random = RandomizedSearchCV(
+            estimator=rf,
+            param_distributions=random_grid,
+            n_iter=100,
+            cv=3,
+            verbose=2,
+            random_state=42,
+            n_jobs=-1,
+        )
+        
         rf_random.fit(x, y)
+        
+        print("Best parameters found:\n", rf_random.best_params_)
+    
+        return rf_random.best_estimator_
+
+
+ 
     else:
         # From function Optimizing_Hyperparamters we found the best parameters
         # by closing in on the best parameters over a series of optimizations
@@ -178,24 +189,11 @@ def optimize_hyperparameters(x, y, searching=True):
         rf.fit(x, y)
         return rf
 
-    print("Best parameters found:\n", rf_random.best_params_)
-
-    return rf_random.best_estimator_
-
-
-best_parameters = {
-    "n_estimators": 700,
-    "min_samples_split": 8,
-    "min_samples_leaf": 1,
-    "max_features": "sqrt",
-    "max_depth": None,
-    "bootstrap": False,
-}
 
 
 def test_accuracy(DATA, FOREST=False, OPTIMIZED_FOREST=False):
     # Get the training data
-    x_train, x_test, y_train, y_test = process_data(DATA)
+    x_train, x_test, y_train, y_test, _ = process_data(DATA)
 
     # Train the model, currently this is only the (optimized) forest model
     if FOREST:
