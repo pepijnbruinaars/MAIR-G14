@@ -41,7 +41,6 @@ class Message(TypedDict):
     text: str
     sender: str
 
-
 class DialogManager:
     """
     DialogManager class, which can be called to start a new conversation with the bot.
@@ -65,6 +64,9 @@ class DialogManager:
         self.price_options = information["pricerange"].unique()[0]
         self.area_options = ['west', 'north', 'south', 'centre', 'east']  
 
+        self.options = ["Danish", "Spanish", "Italian", "phone", "number", "telephone", "contact",
+                        "address", "located", "location", "where", "postcode", "post code", "post", 
+                        "code"]
         self.intent_classifier = joblib.load("models/optimized_random_forest.joblib")
 
     def __repr__(self):
@@ -119,7 +121,7 @@ class DialogManager:
             print("\r\N{bust in silhouette} User: ", end="")
             user_input = input()
             self.__handle_input(user_input)
-
+            
     # -------------- Internal methods --------------
     def __get_intent(self, prepped_user_input):
         # Pre-process user input
@@ -134,6 +136,51 @@ class DialogManager:
             }
         )
 
+    def __handle_request(self, prepped_user_input, restaurant):
+        # in findoutuserintent, checks for phone, addr and postcode and returns it
+
+        output = ""
+        
+        phone_matches = ["phone", "number", "telephone", "contact"]
+        address_matches = ["address", "located", "location", "where"]
+        postcode_matches = ["postcode", "post code", "post", "code"]
+        
+        for match in phone_matches:
+            #check for phone number
+            if match in prepped_user_input:
+                output = f"The phone number of the restaurant is {restaurant['phone']}."
+                break
+
+        for match in address_matches:
+            #check for address
+            if match in prepped_user_input:
+                if len(output) == 0:
+                    output = f"The {restaurant['name']} is on {restaurant['addr']}. "
+                else:
+                    # respond differently if phone number is asked as well
+                    output = output[:-1] + f" and it is located on {restaurant['addr']}."
+                break
+                
+        for match in  postcode_matches:
+            #check for postcode
+            if match in prepped_user_input:
+                if len(output) == 0:
+                   output =f"The post code of {restaurant['name']} is {restaurant['postcode']}."
+                else:
+                    # respond differently if phone number or address is asked as well
+                    output = output[:-1] + f", its postcode is {restaurant['postcode']}."
+                break
+        
+        # if no information was found return to findoutuserintent
+        if len(output) == 0:
+            return False
+        
+        #else provide the user with the information
+        self.__respond(self,output)
+
+        return True
+        
+        
     # -------------- Helper methods --------------
     def __get_levenshtein_alternatives(self, word, options):
         matches = []
