@@ -61,9 +61,9 @@ class DialogManager:
             "price_range": None,
             "area": None,
         }
-        self.food = information["food"].unique()[0]
-        self.price = information["pricerange"].unique()[0]
-        self.area = ['west', 'north', 'south', 'centre', 'east']  
+        self.food_options = information["food"].unique()[0]
+        self.price_options = information["pricerange"].unique()[0]
+        self.area_options = ['west', 'north', 'south', 'centre', 'east']  
 
         self.intent_classifier = joblib.load("models/optimized_random_forest.joblib")
 
