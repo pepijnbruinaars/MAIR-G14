@@ -31,11 +31,23 @@ train_data = pd.read_csv("data/splits/train_dialog_acts.csv")
 
 
 def process_data(df):
+    """
+    df = the dataframe you want to prepare for training 
+    
+    test_split is the proportion of the data to use for testing purposes. 
+    if set to 0 all the data will go into training data
+    
+    Returns train test split, and the vectorizer fitted on training data as: 
+    
+    x_train, y_train, x_test, y_test, vectorizer
+    
+    """
     # copy the dataframe to avoid mutating the original
     df_copy = df.copy()
     # categorize the label data as numerical data, (null = -1), using pd.factorize
     df_copy["label"] = pd.factorize(df_copy["label"])[0]
 
+    
     # Use the Sklearn method of countVectorizer to make a matrix of word counts
     # this method also tokenizes implicitly
     vectorizer = CountVectorizer()
@@ -44,10 +56,16 @@ def process_data(df):
     # From the matrix we can build the bag of words representation
     # we use the words as column names
     bag_of_words = bag_of_words_matrix.toarray()
+
+    # With the bag of words represenation build a dataframe with features as
+    # colomns 
     features = vectorizer.get_feature_names_out()
     training_data = pd.DataFrame(data=bag_of_words, columns=features)
+    
+    
     # Save training data to csv
     training_data.to_csv("data/splits/rf_training_data.csv")
+    
     # Organize the data into the featuress (X) and target (y)
     x = training_data
     y = df_copy["label"]
@@ -101,8 +119,26 @@ def fit_random_forest(x, y):
 
 
 def optimize_hyperparameters(x, y, searching=True):
-    # fit the model to the given training data if searching is set to true
-    # if not set to searching we use the previously found best parameters
+    """
+
+
+    Parameters
+    ----------
+    x : dataframe
+        the features the random_forest algorithm will train on.
+    y : dataframe
+        the target classification the random_forest will try to predict.
+    searching : bool
+        Make true if you want to search a predefined hyperparameter space for 
+        better options 
+        Make false if you want to use the best hyperparamters found so far
+        
+    Returns
+    -------
+    Random_forest_classifier model
+   
+
+    """
     if searching:
         # Number of trees
         n_estimators = [i for i in range(300, 1000, 100)]
@@ -117,7 +153,7 @@ def optimize_hyperparameters(x, y, searching=True):
         min_samples_leaf = [1]
         # Method of selecting samples for training each tree
         bootstrap = [False]
-
+    
         random_grid = {
             "n_estimators": n_estimators,
             "max_features": max_features,
@@ -126,9 +162,9 @@ def optimize_hyperparameters(x, y, searching=True):
             "min_samples_leaf": min_samples_leaf,
             "bootstrap": bootstrap,
         }
-
+    
         rf = RandomForestClassifier(random_state=42)
-
+    
         # We randomly search parameter space for optimal values.
         # With 3 cross-validation and 100 attempts
         rf_random = RandomizedSearchCV(
@@ -141,11 +177,17 @@ def optimize_hyperparameters(x, y, searching=True):
             n_jobs=-1,
         )
 
+    # fit the model to the given training data if searching is set to true
+    # if not set to searching we use the previously found best parameters
+    
         rf_random.fit(x, y)
-
+        
         print("Best parameters found:\n", rf_random.best_params_)
 
         return rf_random.best_estimator_
+        
+        
+        
 
     else:
         # From function Optimizing_Hyperparamters we found the best parameters
@@ -161,12 +203,14 @@ def optimize_hyperparameters(x, y, searching=True):
         )
         rf.fit(x, y)
         return rf
-
+    
+    
+    
 
 def test_accuracy(DATA, FOREST=False, OPTIMIZED_FOREST=False):
     # Get the training data
     x_train, x_test, y_train, y_test, _ = process_data(DATA)
-
+    
     # Train the model, currently this is only the (optimized) forest model
     if FOREST:
         # Random Forest model trained on the data
@@ -175,6 +219,7 @@ def test_accuracy(DATA, FOREST=False, OPTIMIZED_FOREST=False):
         joblib.dump(model, "models/random_forest.joblib")
         chosen_model = "RandomForestClassifier"
     elif OPTIMIZED_FOREST:
+        # Random forest model with optimized parameters, boolean for finding new parameters.
         model = optimize_hyperparameters(x_train, y_train, False)
         # Save model to models folder
         joblib.dump(model, "models/optimized_random_forest.joblib")
@@ -185,6 +230,8 @@ def test_accuracy(DATA, FOREST=False, OPTIMIZED_FOREST=False):
 
     # predict values
     y_pred = model.predict(x_test)
+    
+         
 
     # test the accuracy
     accuracy = accuracy_score(y_test, y_pred)
@@ -200,3 +247,4 @@ if __name__ == "__main__":
 
     # print("\nWith duplicates")
     # test_accuracy(train_data, FOREST = 1)
+    
