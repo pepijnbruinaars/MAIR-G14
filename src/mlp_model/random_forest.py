@@ -47,8 +47,6 @@ def process_data(df):
     # categorize the label data as numerical data, (null = -1), using pd.factorize
     df_copy["label"] = pd.factorize(df_copy["label"])[0]
 
-    new_record = pd.DataFrame([{"label": -1, 'text':'----'}])
-    df = pd.concat([df, new_record], ignore_index=True)
     
     # Use the Sklearn method of countVectorizer to make a matrix of word counts
     # this method also tokenizes implicitly
@@ -61,7 +59,7 @@ def process_data(df):
 
     # With the bag of words represenation build a dataframe with features as
     # colomns 
-    features = vectorizer.get_feature_names()
+    features = vectorizer.get_feature_names_out()
     training_data = pd.DataFrame(data=bag_of_words, columns=features)
     
     
