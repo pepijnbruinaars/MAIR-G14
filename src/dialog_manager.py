@@ -1,7 +1,6 @@
 import random
 from typing import TypedDict
 from Levenshtein import distance
-import joblib
 import pandas as pd
 import re
 
@@ -83,7 +82,6 @@ class DialogManager:
             "post",
             "code",
         ]
-        self.intent_classifier = joblib.load("models/optimized_random_forest.joblib")
 
     def __repr__(self):
         return f"DialogManager({self.dialog_config})"

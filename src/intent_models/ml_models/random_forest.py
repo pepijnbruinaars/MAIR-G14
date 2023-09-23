@@ -200,6 +200,22 @@ def optimize_hyperparameters(x, y, searching=True):
         return rf
 
 
+def generate_random_forest():
+    """Generate the random forest model with optimized parameters. This is used solely for
+    generating the model for the first time a user runs the system, and should not be used again.
+    """
+    # Get the training data
+    x_train, _, y_train, _, _ = process_data(train_data_no_dupes)
+
+    # Random forest model with optimized parameters, boolean for finding new parameters.
+    model = optimize_hyperparameters(x_train, y_train, False)
+
+    # Save model to models folder
+    joblib.dump(model, "models/optimized_random_forest.joblib")
+
+    return model
+
+
 def test_accuracy(DATA, FOREST=False, OPTIMIZED_FOREST=False):
     # Get the training data
     x_train, x_test, y_train, y_test, _ = process_data(DATA)
@@ -213,9 +229,7 @@ def test_accuracy(DATA, FOREST=False, OPTIMIZED_FOREST=False):
         chosen_model = "RandomForestClassifier"
     elif OPTIMIZED_FOREST:
         # Random forest model with optimized parameters, boolean for finding new parameters.
-        model = optimize_hyperparameters(x_train, y_train, False)
-        # Save model to models folder
-        joblib.dump(model, "models/optimized_random_forest.joblib")
+        model = generate_random_forest(DATA)
         chosen_model = "OptimizedRandomForestClassifier"
     else:
         print("No valid model selected")
