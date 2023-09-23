@@ -61,8 +61,8 @@ class DialogManager:
             "price_range": None,
             "area": None,
         }
-        self.food_options = information["food"].unique()[0]
-        self.price_options = information["pricerange"].unique()[0]
+        self.food_options = information["food"].unique()
+        self.price_options = information["pricerange"].unique()
         self.area_options = ["west", "north", "south", "centre", "east"]
 
         self.options = [
@@ -147,7 +147,7 @@ class DialogManager:
             }
         )
 
-    def __handle_request(self, prepped_user_input, restaurant):
+    def __handle_request(self, prepped_user_input, restaurant) -> bool:
         # in findoutuserintent, checks for phone, addr and postcode and returns it
 
         output = ""
@@ -196,7 +196,7 @@ class DialogManager:
         return True
 
     # -------------- Helper methods --------------
-    def __get_levenshtein_alternatives(self, word, options):
+    def __get_levenshtein_alternatives(self, word, options) -> list[dict]:
         matches = []
         options_copy = options.copy()  # Copy options to avoid mutating original list
         options_copy = [
@@ -224,14 +224,14 @@ class DialogManager:
         matches.sort(key=lambda x: x["distance"])
         return matches
 
-    def __show_matches(self, matches):
+    def __show_matches(self, matches) -> None:
         for match in matches:
             # Upper case first letter of option
             if match["option"] is not None:
                 match["option"] = match["option"][0].upper() + match["option"][1:]
                 print("\t- " + match["option"] + "?")
 
-    def __extract_preference(self, input_string: str):
+    def __extract_preference(self, input_string: str) -> None:
         # make sure input is in lower case
         input_string = input_string.lower()
 
@@ -252,22 +252,13 @@ class DialogManager:
             self.stored_preferences["food"] = food_match.group()
             found_something = True
 
-            if self.dialog_config["verbose"]:
-                print(food_match.group())
-
         if area_match:
             self.stored_preferences["area"] = area_match.group()
             found_something = True
 
-            if self.dialog_config["verbose"]:
-                print(area_match.group())
-
         if price_match:
             self.stored_preferences["price_range"] = price_match.group()
             found_something = True
-
-            if self.dialog_config["verbose"]:
-                print(price_match.group())
 
         if not found_something:
             if self.dialog_config["verbose"]:
@@ -282,6 +273,14 @@ class DialogManager:
                 if matches:
                     self.__respond("Did you mean one of the following?")
                     self.__show_matches(matches)
+
+        # Debug information
+        if self.dialog_config["verbose"]:
+            print("extracted type preference: ", self.stored_preferences["food"])
+            print("extracted area preference: ", self.stored_preferences["area"])
+            print(
+                "extracted price preference: ", self.stored_preferences["price_range"]
+            )
 
         return
 
