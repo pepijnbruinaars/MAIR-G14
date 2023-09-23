@@ -1,4 +1,5 @@
 import random
+from textwrap import dedent
 from typing import TypedDict
 from Levenshtein import distance
 import pandas as pd
@@ -57,8 +58,8 @@ class DialogManager:
             # "confirmfoodtype": f"",
         }
         self.stored_preferences = {
-            "food_type": None,
-            "price_range": None,
+            "food": None,
+            "pricerange": None,
             "area": None,
         }
         self.food_options = information["food"].unique()
@@ -108,7 +109,30 @@ class DialogManager:
             print(f"Intent: {intent}")
             print(f"User input: {prepped_user_input}")
 
-        self.__respond(f"Your intent is {intent}?")
+        # Retrieve restaurant based on preferences
+        restaurant, other_options = self.__retrieve_restaurant(self.stored_preferences)
+
+        # Handle user intent
+        match intent:
+            case IntentType.ACK:
+                self.__respond("You're welcome!")
+            case IntentType.AFFIRM:
+                self.__respond("Great!")
+            case IntentType.BYE:
+                self.__handle_exit()
+            case IntentType.INFORM:
+                self.__handle_inform(restaurant)
+            case IntentType.REQUEST:
+                if restaurant is not None:
+                    self.__handle_request(prepped_user_input, restaurant)
+            case IntentType.RESTART:
+                self.stored_preferences = {
+                    "food": None,
+                    "pricerange": None,
+                    "area": None,
+                }
+            case _:  # Default case
+                self.__respond("I'm sorry, I don't understand.")
 
     def __respond(self, input):
         self.__add_message(None, input, "bot")
@@ -135,7 +159,6 @@ class DialogManager:
 
     # -------------- Internal methods --------------
     def __get_intent(self, prepped_user_input):
-        # Pre-process user input
         return predict_single_input(prepped_user_input)
 
     def __add_message(self, intent, text, sender):
@@ -146,6 +169,9 @@ class DialogManager:
                 "sender": sender,
             }
         )
+
+    def __handle_inform(self, restaurant) -> bool:
+        self.__respond(self.__get_suggestion_string(restaurant))
 
     def __handle_request(self, prepped_user_input, restaurant) -> bool:
         # in findoutuserintent, checks for phone, addr and postcode and returns it
@@ -257,7 +283,7 @@ class DialogManager:
             found_something = True
 
         if price_match:
-            self.stored_preferences["price_range"] = price_match.group()
+            self.stored_preferences["pricerange"] = price_match.group()
             found_something = True
 
         if not found_something:
@@ -278,9 +304,7 @@ class DialogManager:
         if self.dialog_config["verbose"]:
             print("extracted type preference: ", self.stored_preferences["food"])
             print("extracted area preference: ", self.stored_preferences["area"])
-            print(
-                "extracted price preference: ", self.stored_preferences["price_range"]
-            )
+            print("extracted price preference: ", self.stored_preferences["pricerange"])
 
         return
 
@@ -289,17 +313,18 @@ class DialogManager:
 
         Args:
             preferences (_type_): The retrieved preferences of the user
-
-        Raises:
-            LookupError: If no restaurant is found
         """
         data = pd.read_csv("data/original/restaurant_info.csv")
-        pref_type = preferences["type"]
+        pref_type = preferences["food"]
         pref_area = preferences["area"]
-        pref_price = preferences["price_range"]
+        pref_price = preferences["pricerange"]
 
         restaurant_choice = None
         other_options = None
+
+        # If no preferences are given, return None
+        if pref_type is None and pref_area is None and pref_price is None:
+            return None, None
 
         if pref_type is not None:
             data = data[data["food"] == pref_type]
@@ -308,14 +333,42 @@ class DialogManager:
         if pref_price is not None:
             data = data[data["pricerange"] == pref_price]
 
-        # if no restaurant available, function raises error
-        if data.empty:
-            raise LookupError("No restaurant found!")
-        elif len(data) == 1:
+        if len(data) == 1:
             restaurant_choice = data
         elif len(data) > 1:
             restaurant_choice = data.sample(n=1)
             restaurant_choice_name = restaurant_choice["restaurantname"].iloc[0]
             other_options = data[data["restaurantname"] != restaurant_choice_name]
 
+        # Create dict with restaurant information
+        if restaurant_choice is not None:
+            restaurant_choice = restaurant_choice.to_dict("records")[0]
+        if other_options is not None:
+            other_options = other_options.to_dict("records")
+
         return restaurant_choice, other_options
+
+    def __get_suggestion_string(self, restaurant):
+        """Function which returns a string with a restaurant suggestion
+
+        Args:
+            restaurant (_type_): The retrieved restaurant
+        """
+        if restaurant is not None:
+            # Remove new lines from the returned string
+            return dedent(
+                f"""\
+                I suggest you go to {restaurant['restaurantname']}. It's {self.__get_word_prefix(restaurant['food'])}
+                {restaurant['food']} restaurant in the {restaurant['area']} of town."""
+            ).replace("\n", " ")
+        return "I'm sorry, I don't know any restaurants that match your preferences."
+
+    def __get_word_prefix(self, word):
+        """Function which a or an based on the first letter of a word
+
+        Args:
+            word (_type_): The word to get the prefix of
+        """
+        if word[0] in ["a", "e", "i", "o", "u"]:
+            return "an"
+        return "a"
