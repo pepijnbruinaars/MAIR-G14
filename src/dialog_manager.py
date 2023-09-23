@@ -7,7 +7,7 @@ import re
 
 from helpers import prep_user_input
 
-from mlp_model.random_forest import predict_single_input
+from intent_models.ml_models.random_forest import predict_single_input
 
 information = pd.read_csv("data/restaurant_info.csv")
 
