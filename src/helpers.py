@@ -103,9 +103,7 @@ def check_models(args: argparse.Namespace):
         )
 
     if args.model == "keyword":
-        raise NotImplementedError(
-            "Keyword model not implemented yet. Please select another model."
-        )
+        return
 
     # If we get here, the model does not exist
     raise ValueError(f"Invalid model: {args.model}")

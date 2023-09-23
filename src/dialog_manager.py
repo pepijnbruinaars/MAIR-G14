@@ -6,6 +6,7 @@ import pandas as pd
 import re
 
 from helpers import prep_user_input
+from intent_models.baselines.keyword_matching import match_sentence
 
 from intent_models.ml_models.random_forest import predict_single_input
 
@@ -159,7 +160,10 @@ class DialogManager:
 
     # -------------- Internal methods --------------
     def __get_intent(self, prepped_user_input):
-        return predict_single_input(prepped_user_input)
+        if self.dialog_config["intent_model"] == "RF":
+            return predict_single_input(prepped_user_input)
+        if self.dialog_config["intent_model"] == "keyword":
+            return match_sentence(prepped_user_input)
 
     def __add_message(self, intent, text, sender):
         self.message_history.append(
