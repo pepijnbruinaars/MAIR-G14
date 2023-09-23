@@ -76,7 +76,9 @@ def check_models(args: argparse.Namespace):
         ValueError: Raised if the selected model is invalid.
     """
     # Check models folder for first time use
-    if not os.path.isdir("models"):
+    try:
+        os.listdir("models")
+    except FileNotFoundError:
         os.mkdir("models")
 
     # Check for each model

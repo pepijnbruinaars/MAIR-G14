@@ -5,7 +5,7 @@ from helpers import check_models
 
 def main(args: argparse.Namespace):
     # Check validity of model
-    check_models()
+    check_models(args)
 
     # Create dialog manager
     dialog_config: DialogConfig = {"intent_model": args.model, "verbose": args.verbose}
