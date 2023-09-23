@@ -97,12 +97,7 @@ def check_models(args: argparse.Namespace):
             "Neural model not implemented yet. Please select another model."
         )
 
-    if args.model == "majority":
-        raise NotImplementedError(
-            "Majority model not implemented yet. Please select another model."
-        )
-
-    if args.model == "keyword":
+    if args.model == "majority" or args.model == "keyword":
         return
 
     # If we get here, the model does not exist
