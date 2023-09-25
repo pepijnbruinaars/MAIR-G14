@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
 import torch
 import pickle
 
@@ -99,22 +100,69 @@ OUTPUT_SIZE = 15  # 15 different dialog acts
 HIDDEN_SIZE = 75
 DROPOUT_RATE = 0.2
 
-model = FeedForwardNN(VECTOR_SIZE, OUTPUT_SIZE, HIDDEN_SIZE, DROPOUT_RATE).to(device)
-optimizer = torch.optim.Adam(model.parameters())
-criterion = torch.nn.CrossEntropyLoss()
-best_model = training_loop(model, criterion, optimizer)
+# best_model = training_loop(model, criterion, optimizer)
 
 # save the model
-torch.save(best_model.state_dict(), "models/mlp_model.pt")
+# torch.save(best_model.state_dict(), "models/mlp_model.pt")
 
 
-def predict_single_input(input):
+def fit_mlp():
+    # read the data
+    df = pd.read_csv("data/splits/train_dialog_acts_no_dupes.csv")
+    training_data = pd.read_csv("data/splits/rf_training_data.csv", index_col=0)
+
+    df["label"] = pd.factorize(df["label"])[0]
+    df["label"] = df["label"].replace(-1, 14)
+
+    x = training_data
+    y = df["label"]
+
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y, test_size=0.15, random_state=42
+    )
+
+    x_train = torch.FloatTensor(x_train.values)
+    x_test = torch.FloatTensor(x_test.values)
+
+    y_train = torch.LongTensor(y_train.values)
+    y_test = torch.LongTensor(y_test.values)
+
+    # setup device agnostic code
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    # Call the final training loop
+    model = FeedForwardNN(VECTOR_SIZE, OUTPUT_SIZE, HIDDEN_SIZE, DROPOUT_RATE).to(
+        device
+    )
+
+    # Save the vectorizer
+    vectorizer = CountVectorizer()
+    vectorizer.fit_transform(df["text"])
+    with open("models/vectorizer.pkl", "wb") as file:
+        pickle.dump(vectorizer, file)
+
+    model = FeedForwardNN(VECTOR_SIZE, OUTPUT_SIZE, HIDDEN_SIZE, DROPOUT_RATE).to(
+        device
+    )
+    optimizer = torch.optim.Adam(model.parameters())
+    criterion = torch.nn.CrossEntropyLoss()
+
+    # Save the model
+    best_model = training_loop(model, criterion, optimizer)
+    torch.save(best_model.state_dict(), "models/mlp_model.pt")
+
+
+def predict_single_input_mlp(input):
     df = pd.read_csv("data/no_duplicates_dialog_acts.csv")
     labels = pd.factorize(df["label"])[1]
 
     # load the vectorizer from data
-    with open("models/vectorizer.pkl", "rb") as file:
-        vectorizer = pickle.load(file)
+    try:
+        with open("models/vectorizer.pkl", "rb") as file:
+            vectorizer = pickle.load(file)
+    except FileNotFoundError:
+        # If the vectorizer is not found, train a new model
+        fit_mlp()
 
     # Load the model
     model = FeedForwardNN(VECTOR_SIZE, OUTPUT_SIZE, HIDDEN_SIZE, DROPOUT_RATE)
@@ -131,4 +179,4 @@ def predict_single_input(input):
     return labels[y_pred.item()]
 
 
-print(predict_single_input("Hello"))
+# print(predict_single_input_mlp("Hello"))

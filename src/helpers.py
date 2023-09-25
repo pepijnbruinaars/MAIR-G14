@@ -3,6 +3,7 @@ import os
 from nltk.corpus import stopwords
 import string
 import csv
+from intent_models.ml_models.mlp import fit_mlp
 
 from intent_models.ml_models.random_forest import generate_random_forest
 
@@ -64,6 +65,11 @@ def prep_user_input(user_input: str):
     return user_input
 
 
+def print_verbose(verbose: bool, message: str):
+    if verbose:
+        print(message)
+
+
 def check_models(args: argparse.Namespace):
     """Check if the models folder contains the necessary models for the selected model.
     If not, we train the selected model.
@@ -76,29 +82,44 @@ def check_models(args: argparse.Namespace):
         ValueError: Raised if the selected model is invalid.
     """
     # Check models folder for first time use
+    print_verbose(args.verbose, "Checking models folder...")
     try:
         os.listdir("models")
     except FileNotFoundError:
+        print_verbose(args.verbose, "Creating models folder...")
         os.mkdir("models")
 
-    # Check for each model
-    if args.model == "RF":
-        with os.scandir("models") as folder:
-            # If folder contains optimized_random_forest.joblib, then we are good to go
-            if "optimized_random_forest.joblib" in [file.name for file in folder]:
-                pass
-            # Train model if not
-            else:
-                generate_random_forest()
-        return
+    with os.scandir("models") as folder:
+        # Check for each model
+        match args.model:
+            case "RF":
+                print_verbose(args.verbose, "Using random forest model...")
+                # If folder contains optimized_random_forest.joblib, then we are good to go
+                if "optimized_random_forest.joblib" in [file.name for file in folder]:
+                    return
+                # Train model if not
+                else:
+                    print_verbose(args.verbose, "Training random forest...")
+                    generate_random_forest()
+                    print_verbose(args.verbose, "Done training random forest.")
+                    return
 
-    if args.model == "neural":
-        raise NotImplementedError(
-            "Neural model not implemented yet. Please select another model."
-        )
-
-    if args.model == "majority" or args.model == "keyword":
-        return
-
-    # If we get here, the model does not exist
-    raise ValueError(f"Invalid model: {args.model}")
+            case "neural":
+                print_verbose(args.verbose, "Using multi layer perceptron model...")
+                # If folder contains mlp_model.pt, then we are good to go
+                if "mlp_model.pt" in [file.name for file in folder]:
+                    return
+                # Train model if not
+                else:
+                    print_verbose(args.verbose, "Training multi layer perceptron...")
+                    fit_mlp()
+                    print_verbose(args.verbose, "Done training multi layer perceptron.")
+                    return
+            case "majority":
+                print_verbose(args.verbose, "Using majority model...")
+                return
+            case "keyword":
+                print_verbose(args.verbose, "Using keyword model...")
+                return
+            case _:
+                raise ValueError(f"Invalid model: {args.model}")
