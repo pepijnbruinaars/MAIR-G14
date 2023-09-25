@@ -14,9 +14,11 @@ df["label"] = df["label"].replace(-1,14)
 x = training_data
 y = df["label"]
 
+
 x_train, x_test, y_train, y_test =  train_test_split(
         x, y, test_size=0.15, random_state=42
     )
+
 
 x_train = torch.FloatTensor(x_train.values)
 x_test = torch.FloatTensor(x_test.values)
@@ -46,6 +48,7 @@ def calculate_accuracy(preds, targets):
             count += 1
 
     return count / len(preds)
+
 
 # setup device agnostic code
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -97,8 +100,6 @@ optimizer = torch.optim.Adam(model.parameters())
 criterion = torch.nn.CrossEntropyLoss()
 best_model = training_loop(model,criterion,optimizer)
 
-
-
 # save the model
 torch.save(best_model.state_dict(), "models/mlp_model.pt")
 
@@ -126,5 +127,4 @@ def predict_single_input(input):
     return labels[y_pred.item()]
 
 print(predict_single_input("Hello"))
-
 
