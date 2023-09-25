@@ -2,9 +2,10 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 import torch
+import pickle
 
 # read the data
-df = pd.read_csv("data/no_duplicates_dialog_acts.csv")
+df = pd.read_csv("data/splits/train_dialog_acts_no_dupes.csv")
 training_data = pd.read_csv("data/splits/rf_training_data.csv", index_col = 0)
 
 df["label"] = pd.factorize(df["label"])[0]
@@ -28,10 +29,10 @@ y_test = torch.LongTensor(y_test.values)
 class FeedForwardNN(torch.nn.Module):
     def __init__(self, input_dim, output_dim, hidden_size, dropout_rate):
         super(FeedForwardNN, self).__init__()
-        self.layer_1 = torch.nn.Linear(input_dim, 100)
-        self.layer_2 = torch.nn.Linear(100, 100)
-        self.layer_3 = torch.nn.Linear(100, output_dim)
-        self.dropout = torch.nn.Dropout(0.5)
+        self.layer_1 = torch.nn.Linear(input_dim, hidden_size)
+        self.layer_2 = torch.nn.Linear(hidden_size, hidden_size)
+        self.layer_3 = torch.nn.Linear(hidden_size, output_dim)
+        self.dropout = torch.nn.Dropout(dropout_rate)
         self.relu = torch.nn.ReLU()
 
     def forward(self, x):
@@ -97,5 +98,33 @@ criterion = torch.nn.CrossEntropyLoss()
 best_model = training_loop(model,criterion,optimizer)
 
 
+
 # save the model
 torch.save(best_model.state_dict(), "models/mlp_model.pt")
+
+def predict_single_input(input):
+    
+    df = pd.read_csv("data/no_duplicates_dialog_acts.csv")
+    labels = pd.factorize(df["label"])[1]
+    
+    # load the vectorizer from data
+    with open('models/vectorizer.pkl', 'rb') as file:
+        vectorizer = pickle.load(file)
+
+    # Load the model
+    model = FeedForwardNN(VECTOR_SIZE, OUTPUT_SIZE, HIDDEN_SIZE, DROPOUT_RATE)
+    model.load_state_dict(torch.load("models/mlp_model.pt"))
+    model.eval()
+
+    # Add the input to the vectorized training data
+    input_data = torch.FloatTensor(vectorizer.transform([input]).toarray())
+
+    # Predict the intent of the input
+    y_pred = torch.argmax(model(input_data))
+
+    # Return the label of the intent
+    return labels[y_pred.item()]
+
+print(predict_single_input("Hello"))
+
+
