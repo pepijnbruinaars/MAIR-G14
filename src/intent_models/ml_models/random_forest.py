@@ -99,8 +99,11 @@ def predict_single_input(input):
     # Add the input to the vectorized training data
     input_data = vectorizer.transform([input]).toarray()
 
+    features = vectorizer.get_feature_names_out()
+    x_to_predict = pd.DataFrame(data=input_data, columns=features)
+
     # Predict the intent of the input
-    y_pred = model.predict(input_data)
+    y_pred = model.predict(x_to_predict)
 
     # Return the label of the intent
     return labels[y_pred[0]]
