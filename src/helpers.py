@@ -2,6 +2,7 @@ import argparse
 import os
 from nltk.corpus import stopwords
 import string
+import nltk
 import csv
 
 from intent_models.ml_models.random_forest import generate_random_forest
@@ -51,9 +52,16 @@ def remove_stopwords(data_dict):
 
 def prep_user_input(user_input: str):
     # Remove stopwords
-    user_input = " ".join(
-        [word for word in user_input.split() if word not in stopwords.words("english")]
-    )
+    try:
+        user_input = " ".join(
+            [word for word in user_input.split() if word not in stopwords.words("english")]
+        )
+    except LookupError:
+        print("Stopwords have not yet been downloaded. Downloading now...")
+        nltk.download('stopwords')
+        user_input = " ".join(
+            [word for word in user_input.split() if word not in stopwords.words("english")]
+        )
 
     # Remove punctuation
     user_input = user_input.translate(str.maketrans("", "", string.punctuation))
@@ -82,7 +90,7 @@ def check_models(args: argparse.Namespace):
         os.mkdir("models")
 
     # Check for each model
-    if args.model == "RF":
+    if args.intent_model == "RF":
         with os.scandir("models") as folder:
             # If folder contains optimized_random_forest.joblib, then we are good to go
             if "optimized_random_forest.joblib" in [file.name for file in folder]:
@@ -92,12 +100,12 @@ def check_models(args: argparse.Namespace):
                 generate_random_forest()
         return
 
-    if args.model == "neural":
+    if args.intent_model == "neural":
         raise NotImplementedError(
             "Neural model not implemented yet. Please select another model."
         )
 
-    if args.model == "majority" or args.model == "keyword":
+    if args.intent_model == "majority" or args.model == "keyword":
         return
 
     # If we get here, the model does not exist

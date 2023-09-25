@@ -1,14 +1,15 @@
-import random
-from textwrap import dedent
-from typing import TypedDict
-from Levenshtein import distance
-import pandas as pd
-import re
-
-from helpers import prep_user_input
-from intent_models.baselines.keyword_matching import match_sentence
-
 from intent_models.ml_models.random_forest import predict_single_input
+from intent_models.baselines.keyword_matching import match_sentence
+from helpers import prep_user_input
+from Levenshtein import distance
+from typing import TypedDict
+from textwrap import dedent
+from pygame import mixer
+from io import BytesIO
+from gtts import gTTS
+import pandas as pd
+import random
+import re
 
 information = pd.read_csv("data/restaurant_info.csv")
 
@@ -34,8 +35,12 @@ class IntentType:
 
 # DialogConfig type
 class DialogConfig(TypedDict):
-    intent_model: str  # Type of intent model, default is RandomForest
-    verbose: bool  # Whether to print out debug information
+    intent_model: str   # Type of intent model, default is RandomForest
+    verbose: bool       # Whether to print out debug information
+    tts: bool           # Wheter to convert the system output to speech
+    caps: bool          # Wheter to print the system output in all caps
+    levenshtein: int    # Integer defining the desired levenshtein distance
+    delay: float        # Optional delay before the system responds
 
 
 class Message(TypedDict):
@@ -138,6 +143,16 @@ class DialogManager:
     def __respond(self, input):
         self.__add_message(None, input, "bot")
         print(f"\N{robot face} Bot: {input}")
+        if self.dialog_config["tts"]:
+            mp3_fp = BytesIO()
+            tts = gTTS(input, lang='en', tld="com")
+            tts.write_to_fp(mp3_fp)
+            mp3_fp.seek(0)
+
+            mixer.init()
+            mp3_fp.seek(0)
+            mixer.music.load(mp3_fp, "mp3")
+            mixer.music.play()
 
     def __print_message_history(self):
         for message in self.message_history:
@@ -296,8 +311,8 @@ class DialogManager:
             if self.dialog_config["verbose"]:
                 print("no preference found")
 
-            # concat all option lists to look for mistyped ones
-            all_options = [*self.food_options, *self.area_options, *self.price_options]
+            # concat all options to look for mistyped ones
+            all_options = self.food_options + self.area_options + self.price_options
 
             # find closest with levenshtein distance (max = 3)
             for i in input_string.split(" "):
