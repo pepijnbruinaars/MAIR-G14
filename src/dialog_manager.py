@@ -375,6 +375,4 @@ class DialogManager:
         Args:
             word (_type_): The word to get the prefix of
         """
-        if word[0] in ["a", "e", "i", "o", "u"]:
-            return "an"
-        return "a"
+        return "an" if word[0] in ["a", "e", "i", "o", "u"] else "a"
