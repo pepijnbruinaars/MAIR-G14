@@ -108,8 +108,10 @@ class DialogManager:
 
         # Logging for debugging
 
-        print_verbose(f"Intent: {intent}")
-        print_verbose(f"User input: {prepped_user_input}")
+        print_verbose(self.dialog_config["verbose"], f"Intent: {intent}")
+        print_verbose(
+            self.dialog_config["verbose"], f"User input: {prepped_user_input}"
+        )
 
         # Retrieve restaurant based on preferences
         restaurant, other_options = self.__retrieve_restaurant(self.stored_preferences)
@@ -142,13 +144,17 @@ class DialogManager:
 
     def __print_message_history(self, verbose: bool):
         if verbose:
-            print("\n\n\n\n\n")
-            print("Message history:")
+            print("\n------------- Message history -------------")
             for message in self.message_history:
-                print(
-                    f"{message['sender']}: {message['text']} ({message['classified_intent']})"
+                emoji = (
+                    "\N{robot face}"
+                    if message["sender"] == "bot"
+                    else "\N{bust in silhouette}"
                 )
-            print("\n\n\n\n\n")
+                print(
+                    f"{emoji} {message['sender']}: {message['text']} ({message['classified_intent']})"
+                )
+            print("-------------- End of dialog -------------")
 
     def __handle_exit(self):
         self.__respond("Goodbye! \N{waving hand sign}")
@@ -318,18 +324,15 @@ class DialogManager:
         # Debug information
         print_verbose(
             self.dialog_config["verbose"],
-            "extracted type preference: ",
-            self.stored_preferences["food"],
+            f"extracted type preference: {self.stored_preferences['food']}",
         )
         print_verbose(
             self.dialog_config["verbose"],
-            "extracted area preference: ",
-            self.stored_preferences["area"],
+            f"extracted area preference: {self.stored_preferences['area']}",
         )
         print_verbose(
             self.dialog_config["verbose"],
-            "extracted price preference: ",
-            self.stored_preferences["pricerange"],
+            f"extracted price preference: {self.stored_preferences['pricerange']}",
         )
 
         return
