@@ -62,8 +62,9 @@ class DialogManager:
             "price_range": None,
             "area": None,
         }
-        self.food_options = information["food"].unique()[0]
-        self.price_options = information["pricerange"].unique()[0]
+
+        self.food_options = information["food"].unique().tolist()
+        self.price_options = information["pricerange"].unique().tolist()
         self.area_options = ["west", "north", "south", "centre", "east"]
 
         self.options = [
@@ -238,9 +239,9 @@ class DialogManager:
         input_string = input_string.lower()
 
         # for every entry add the option of to the regex
-        food_regex = "|".join(self.food)
-        area_regex = "|".join(self.area)
-        price_regex = "|".join(self.price)
+        food_regex = "|".join(self.food_options)
+        area_regex = "|".join(self.area_options)
+        price_regex = "|".join(self.price_options)
 
         # match the possible preferences to the input
         food_match = re.search(rf"{food_regex}", input_string)
@@ -276,7 +277,7 @@ class DialogManager:
                 print("no preference found")
 
             # concat all options to look for mistyped ones
-            all_options = self.food + self.area + self.price
+            all_options = self.food_options + self.area_options 
 
             # find closest with levenshtein distance (max = 3)
             for i in input_string.split(" "):

@@ -89,10 +89,10 @@ def predict_single_input(input):
     Args:
         input (__str__): The input string to predict the intent of.
     """
-    # Get the training data
+    # Get the labels from the training data
     labels = pd.factorize(train_data_no_dupes["label"])[1]
 
-    # load the vectorizer from data
+    # load the vectorizer from training data processing
     _, _, _, _, vectorizer = process_data(train_data_no_dupes)
 
     # Load the model
@@ -101,8 +101,12 @@ def predict_single_input(input):
     # Add the input to the vectorized training data
     input_data = vectorizer.transform([input]).toarray()
 
+    # Add colomns to input data
+    features = vectorizer.get_feature_names_out()
+    x_to_predict = pd.DataFrame(data=input_data, columns=features)
+
     # Predict the intent of the input
-    y_pred = model.predict(input_data)
+    y_pred = model.predict(x_to_predict)
 
     # Return the label of the intent
     return labels[y_pred[0]]
