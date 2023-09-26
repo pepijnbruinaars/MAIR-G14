@@ -3,9 +3,11 @@ import os
 # Necessary to hide the pygame import message
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
-from intent_models.ml_models.random_forest import predict_single_input
+from intent_models.ml_models.random_forest import predict_single_input_rf
 from intent_models.baselines.keyword_matching import match_sentence
-from helpers import prep_user_input, de_emojify
+from intent_models.ml_models.mlp import predict_single_input_mlp
+from helpers import prep_user_input, de_emojify, print_verbose
+
 from Levenshtein import distance
 from typing import TypedDict
 from textwrap import dedent
@@ -118,9 +120,11 @@ class DialogManager:
             return
 
         # Logging for debugging
-        if self.dialog_config["verbose"]:
-            print(f"Intent: {intent}")
-            print(f"User input: {prepped_user_input}")
+
+        print_verbose(self.dialog_config["verbose"], f"Intent: {intent}")
+        print_verbose(
+            self.dialog_config["verbose"], f"User input: {prepped_user_input}"
+        )
 
         # Retrieve restaurant based on preferences
         restaurant, other_options = self.__retrieve_restaurant(self.stored_preferences)
@@ -183,14 +187,23 @@ class DialogManager:
             while pygame.mixer.music.get_busy():
                 pygame.time.wait(100)  # ms
 
-    def __print_message_history(self):
-        for message in self.message_history:
-            print(message)
+    def __print_message_history(self, verbose: bool):
+        if verbose:
+            print("\n------------- Message history -------------")
+            for message in self.message_history:
+                emoji = (
+                    "\N{robot face}"
+                    if message["sender"] == "bot"
+                    else "\N{bust in silhouette}"
+                )
+                print(
+                    f"{emoji} {message['sender']}: {message['text']} ({message['classified_intent']})"
+                )
+            print("-------------- End of dialog -------------")
 
     def __handle_exit(self):
         self.__respond("Goodbye! \N{waving hand sign}")
-        if self.dialog_config["verbose"]:
-            self.__print_message_history()
+        self.__print_message_history(self.dialog_config["verbose"])
         self.done = True
 
     # -------------- Public methods --------------
@@ -204,12 +217,15 @@ class DialogManager:
 
     # -------------- Internal methods --------------
     def __get_intent(self, prepped_user_input):
-        if self.dialog_config["intent_model"] == "RF":
-            return predict_single_input(prepped_user_input)
-        if self.dialog_config["intent_model"] == "keyword":
-            return match_sentence(prepped_user_input)
-        if self.dialog_config["intent_model"] == "majority":
-            return "inform"  # This is the majority class
+        match self.dialog_config["intent_model"]:
+            case "RF":
+                return predict_single_input_rf(prepped_user_input)
+            case "neural":
+                return predict_single_input_mlp(prepped_user_input)
+            case "keyword":
+                return match_sentence(prepped_user_input)
+            case "majority":
+                return "inform"  # This is the majority class
 
     def __add_message(self, intent, text, sender):
         self.message_history.append(
@@ -306,6 +322,7 @@ class DialogManager:
             if match["option"] is not None:
                 match["option"] = match["option"][0].upper() + match["option"][1:]
                 print("\t- " + match["option"] + "?")
+                self.__add_message(None, match["option"], "bot")
 
     def __extract_preference(self, input_string: str) -> None:
         # make sure input is in lower case
@@ -337,8 +354,7 @@ class DialogManager:
             found_something = True
 
         if not found_something:
-            if self.dialog_config["verbose"]:
-                print("no preference found")
+            print_verbose(self.dialog_config["verbose"], "No exact matches found.")
 
             # concat all options to look for mistyped ones
             all_options = np.concatenate(
@@ -353,10 +369,18 @@ class DialogManager:
                     self.__show_matches(matches)
 
         # Debug information
-        if self.dialog_config["verbose"]:
-            print("extracted type preference: ", self.stored_preferences["food"])
-            print("extracted area preference: ", self.stored_preferences["area"])
-            print("extracted price preference: ", self.stored_preferences["pricerange"])
+        print_verbose(
+            self.dialog_config["verbose"],
+            f"extracted type preference: {self.stored_preferences['food']}",
+        )
+        print_verbose(
+            self.dialog_config["verbose"],
+            f"extracted area preference: {self.stored_preferences['area']}",
+        )
+        print_verbose(
+            self.dialog_config["verbose"],
+            f"extracted price preference: {self.stored_preferences['pricerange']}",
+        )
 
         return
 
