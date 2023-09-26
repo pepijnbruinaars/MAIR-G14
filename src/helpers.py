@@ -105,8 +105,8 @@ def check_models(args: argparse.Namespace):
             "Neural model not implemented yet. Please select another model."
         )
 
-    if args.intent_model == "majority" or args.model == "keyword":
+    if args.intent_model == "majority" or args.intent_model == "keyword":
         return
 
     # If we get here, the model does not exist
-    raise ValueError(f"Invalid model: {args.model}")
+    raise ValueError(f"Invalid model: {args.intent_model}")
