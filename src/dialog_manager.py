@@ -154,16 +154,8 @@ class DialogManager:
                 self.__respond("I'm sorry, I don't understand.")
 
     def __respond(self, input):
-        if self.dialog_config["delay"] != 0.0:
-            start_time = time.time()
-            ctr = 1
-            while time.time() - start_time < self.dialog_config["delay"]:
-                if ctr > 3:
-                    print(f"\N{robot face} Bot: {' ' * ctr}", end="\r")
-                    ctr = 0
-                print(f"\N{robot face} Bot: {'.' * ctr}", end="\r")
-                ctr += 1
-                time.sleep(0.1)
+        if self.dialog_config["delay"] > 0.0:
+            self.__handle_delay()
 
         if self.dialog_config["caps"]:
             input = input.upper()
@@ -208,6 +200,17 @@ class DialogManager:
         self.__print_message_history(self.dialog_config["verbose"])
         self.done = True
 
+    def __handle_delay(self):
+        start_time = time.time()
+        ctr = 1
+        while time.time() - start_time < self.dialog_config["delay"]:
+            if ctr > 3:
+                print(f"\N{robot face} Bot: {' ' * ctr}", end="\r")
+                ctr = 0
+            print(f"\N{robot face} Bot: {'.' * ctr}", end="\r")
+            ctr += 1
+            time.sleep(0.1)
+
     def __handle_speech(self):
         recognizer = sr.Recognizer()
 
@@ -226,9 +229,11 @@ class DialogManager:
             return user_input
 
         except sr.UnknownValueError:
-            print("Sorry, I couldn't understand what you said.")
+            self.__respond("Sorry, I couldn't understand what you said.")
+            print("\r\N{bust in silhouette} User: ", end="")
+            return self.__handle_speech()
         except sr.RequestError as e:
-            print(f"Sorry, an error occurred: {e}")
+            print_verbose("Sorry, an error occurred: {e}")
 
     # -------------- Public methods --------------
     def start_dialog(self):
@@ -331,7 +336,7 @@ class DialogManager:
             if dist == 0:
                 return
 
-            # If distance is less than 2, then we have a match
+            # If distance is less than a certain distance (default = 2), then we have a match
             if dist <= self.dialog_config["levenshtein"]:
                 matches.append(
                     {

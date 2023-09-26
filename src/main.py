@@ -57,7 +57,7 @@ if __name__ == "__main__":
         "--delay",
         help="Configure a delay before system response",
         type=float,
-        default=0.0,
+        default=0.5,
     )
     parser.add_argument(
         "--speech",
