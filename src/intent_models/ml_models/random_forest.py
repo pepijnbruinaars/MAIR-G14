@@ -76,7 +76,7 @@ def process_data(df):
     return x_train, x_test, y_train, y_test, vectorizer
 
 
-def predict_single_input(input):
+def predict_single_input_rf(input):
     """
     Predict the intent of a single input string using the model.
     We have to check if the input contains words that are not in the training data, and
@@ -121,8 +121,6 @@ def fit_random_forest(x, y):
 
 def optimize_hyperparameters(x, y, searching=True):
     """
-
-
     Parameters
     ----------
     x : dataframe
