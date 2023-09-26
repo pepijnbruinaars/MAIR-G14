@@ -7,12 +7,13 @@ from intent_models.ml_models.random_forest import predict_single_input_rf
 from intent_models.baselines.keyword_matching import match_sentence
 from intent_models.ml_models.mlp import predict_single_input_mlp
 from helpers import prep_user_input, de_emojify, print_verbose
-
 from Levenshtein import distance
 from typing import TypedDict
 from textwrap import dedent
 from io import BytesIO
 from gtts import gTTS
+
+import speech_recognition as sr
 import pandas as pd
 import numpy as np
 import random
@@ -50,6 +51,7 @@ class DialogConfig(TypedDict):
     caps: bool  # Wheter to print the system output in all caps
     levenshtein: int  # Integer defining the desired levenshtein distance
     delay: float  # Optional delay before the system responds
+    speech: bool  # Wheter to take user input as speech or not
 
 
 class Message(TypedDict):
@@ -206,13 +208,42 @@ class DialogManager:
         self.__print_message_history(self.dialog_config["verbose"])
         self.done = True
 
+    def __handle_speech(self):
+        recognizer = sr.Recognizer()
+
+        # Capture audio from the microphone
+        with sr.Microphone() as source:
+            audio = recognizer.listen(
+                source, timeout=None, phrase_time_limit=5
+            )  # Adjust the timeout as needed
+        try:
+            # Recognize the audio using Google Web Speech API
+            user_input = recognizer.recognize_google(audio)
+            # Write user input letter for letter
+            [
+                (print(c, end="", flush=True), time.sleep(0.02))
+                for c in user_input
+            ]
+            print()
+
+            return user_input
+
+        except sr.UnknownValueError:
+            print("Sorry, I couldn't understand what you said.")
+        except sr.RequestError as e:
+            print(f"Sorry, an error occurred: {e}")
+
     # -------------- Public methods --------------
     def start_dialog(self):
         self.__respond(self.message_templates["welcome"])
         while not self.done:
             # Get the user input on the same line as the prompt
             print("\r\N{bust in silhouette} User: ", end="")
-            user_input = input()
+            if self.dialog_config["speech"]:
+                user_input = self.__handle_speech()
+            else:
+                user_input = input()
+
             self.__handle_input(user_input)
 
     # -------------- Internal methods --------------

@@ -59,5 +59,11 @@ if __name__ == "__main__":
         type=float,
         default=0.0,
     )
+    parser.add_argument(
+        "--speech",
+        help="Takes the user input in the form of speech instead of text",
+        action="store_true",
+        default=False,
+    )
     args = parser.parse_args()
     main(args)
