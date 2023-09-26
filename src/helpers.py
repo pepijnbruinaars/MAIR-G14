@@ -1,11 +1,12 @@
-import argparse
-import os
+from intent_models.ml_models.random_forest import generate_random_forest
 from nltk.corpus import stopwords
+import argparse
 import string
 import nltk
 import csv
+import os
+import re
 
-from intent_models.ml_models.random_forest import generate_random_forest
 
 
 def load_csv_data(filepath):
@@ -71,6 +72,14 @@ def prep_user_input(user_input: str):
 
     return user_input
 
+def de_emojify(text):
+    regrex_pattern = re.compile(pattern = "["
+        u"\U0001F600-\U0001F64F"  # emoticons
+        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+        u"\U0001F680-\U0001F6FF"  # transport & map symbols
+        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                           "]+", flags = re.UNICODE)
+    return regrex_pattern.sub(r'',text)
 
 def check_models(args: argparse.Namespace):
     """Check if the models folder contains the necessary models for the selected model.

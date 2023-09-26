@@ -1,14 +1,21 @@
+import os
+
+# Necessary to hide the pygame import message
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+
 from intent_models.ml_models.random_forest import predict_single_input
 from intent_models.baselines.keyword_matching import match_sentence
-from helpers import prep_user_input
+from helpers import prep_user_input, de_emojify
 from Levenshtein import distance
 from typing import TypedDict
 from textwrap import dedent
-from pygame import mixer
 from io import BytesIO
 from gtts import gTTS
 import pandas as pd
+import numpy as np
 import random
+import pygame
+import time
 import re
 
 information = pd.read_csv("data/restaurant_info.csv")
@@ -35,12 +42,12 @@ class IntentType:
 
 # DialogConfig type
 class DialogConfig(TypedDict):
-    intent_model: str   # Type of intent model, default is RandomForest
-    verbose: bool       # Whether to print out debug information
-    tts: bool           # Wheter to convert the system output to speech
-    caps: bool          # Wheter to print the system output in all caps
-    levenshtein: int    # Integer defining the desired levenshtein distance
-    delay: float        # Optional delay before the system responds
+    intent_model: str  # Type of intent model, default is RandomForest
+    verbose: bool  # Whether to print out debug information
+    tts: bool  # Wheter to convert the system output to speech
+    caps: bool  # Wheter to print the system output in all caps
+    levenshtein: int  # Integer defining the desired levenshtein distance
+    delay: float  # Optional delay before the system responds
 
 
 class Message(TypedDict):
@@ -141,18 +148,40 @@ class DialogManager:
                 self.__respond("I'm sorry, I don't understand.")
 
     def __respond(self, input):
+        if self.dialog_config["delay"] != 0.0:
+            start_time = time.time()
+            ctr = 1
+            while time.time() - start_time < self.dialog_config["delay"]:
+                if ctr > 3:
+                    print(f" " * ctr, end='\r')    
+                    ctr = 0
+                print(f"." * ctr, end='\r')
+                ctr += 1 
+                time.sleep(0.1)
+
+        if self.dialog_config["caps"]:
+            input = input.upper()
+
         self.__add_message(None, input, "bot")
         print(f"\N{robot face} Bot: {input}")
+
         if self.dialog_config["tts"]:
+            # Convert text to speech
             mp3_fp = BytesIO()
-            tts = gTTS(input, lang='en', tld="com")
+            tts = gTTS(de_emojify(input), lang="en", tld="com")
             tts.write_to_fp(mp3_fp)
+
+            # Rewind to beginning of the audio bytes
             mp3_fp.seek(0)
 
-            mixer.init()
-            mp3_fp.seek(0)
-            mixer.music.load(mp3_fp, "mp3")
-            mixer.music.play()
+            # Play audio
+            pygame.mixer.init(frequency=44100)
+            pygame.mixer.music.load(mp3_fp, "mp3")
+            pygame.mixer.music.play()
+
+            # Wait for audio to finish
+            while pygame.mixer.music.get_busy():
+                pygame.time.wait(100)  # ms
 
     def __print_message_history(self):
         for message in self.message_history:
@@ -259,7 +288,7 @@ class DialogManager:
                 return
 
             # If distance is less than 2, then we have a match
-            if dist <= 2:
+            if dist <= self.dialog_config["levenshtein"]:
                 matches.append(
                     {
                         "option": option,
