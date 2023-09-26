@@ -153,10 +153,10 @@ class DialogManager:
             ctr = 1
             while time.time() - start_time < self.dialog_config["delay"]:
                 if ctr > 3:
-                    print(f" " * ctr, end='\r')    
+                    print(f" " * ctr, end="\r")
                     ctr = 0
-                print(f"." * ctr, end='\r')
-                ctr += 1 
+                print(f"." * ctr, end="\r")
+                ctr += 1
                 time.sleep(0.1)
 
         if self.dialog_config["caps"]:
