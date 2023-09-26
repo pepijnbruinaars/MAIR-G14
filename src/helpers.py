@@ -9,7 +9,6 @@ import os
 import re
 
 
-
 def load_csv_data(filepath):
     data = {}
     with open(filepath, "r") as csv_file:
@@ -81,6 +80,7 @@ def prep_user_input(user_input: str):
 
     return user_input
 
+
 def de_emojify(text):
     regrex_pattern = re.compile(
         pattern="["
@@ -92,6 +92,7 @@ def de_emojify(text):
         flags=re.UNICODE,
     )
     return regrex_pattern.sub(r"", text)
+
 
 def print_verbose(verbose: bool, message: str):
     if verbose:
