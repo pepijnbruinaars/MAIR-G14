@@ -3,23 +3,23 @@ import os
 # Necessary to hide the pygame import message
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
-from intent_models.ml_models.random_forest import predict_single_input_rf
-from intent_models.baselines.keyword_matching import match_sentence
-from intent_models.ml_models.mlp import predict_single_input_mlp
-from helpers import prep_user_input, de_emojify, print_verbose
-from Levenshtein import distance
-from typing import TypedDict
-from textwrap import dedent
-from io import BytesIO
-from gtts import gTTS
+from intent_models.ml_models.random_forest import predict_single_input_rf  # noqa
+from intent_models.baselines.keyword_matching import match_sentence  # noqa
+from intent_models.ml_models.mlp import predict_single_input_mlp  # noqa
+from helpers import prep_user_input, de_emojify, print_verbose  # noqa
+from Levenshtein import distance  # noqa
+from typing import TypedDict  # noqa
+from textwrap import dedent  # noqa
+from io import BytesIO  # noqa
+from gtts import gTTS  # noqa
 
-import speech_recognition as sr
-import pandas as pd
-import numpy as np
-import random
-import pygame
-import time
-import re
+import speech_recognition as sr  # noqa
+import pandas as pd  # noqa
+import numpy as np  # noqa
+import random  # noqa
+import pygame  # noqa
+import time  # noqa
+import re  # noqa
 
 information = pd.read_csv("data/restaurant_info.csv")
 
@@ -220,10 +220,7 @@ class DialogManager:
             # Recognize the audio using Google Web Speech API
             user_input = recognizer.recognize_google(audio)
             # Write user input letter for letter
-            [
-                (print(c, end="", flush=True), time.sleep(0.02))
-                for c in user_input
-            ]
+            [(print(c, end="", flush=True), time.sleep(0.02)) for c in user_input]
             print()
 
             return user_input
@@ -314,7 +311,7 @@ class DialogManager:
             return False
 
         # else provide the user with the information
-        self.__respond(self, output)
+        self.__respond(output)
 
         return True
 
