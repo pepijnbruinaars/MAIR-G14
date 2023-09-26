@@ -312,7 +312,9 @@ class DialogManager:
                 print("no preference found")
 
             # concat all options to look for mistyped ones
-            all_options = self.food_options + self.area_options + self.price_options
+            all_options = np.concatenate(
+                (self.food_options, self.area_options, self.price_options)
+            )
 
             # find closest with levenshtein distance (max = 3)
             for i in input_string.split(" "):
