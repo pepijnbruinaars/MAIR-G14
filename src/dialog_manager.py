@@ -1,15 +1,25 @@
-import random
-from textwrap import dedent
-from typing import TypedDict
-from Levenshtein import distance
-import pandas as pd
-import re
+import os
 
-from helpers import prep_user_input, print_verbose
-from intent_models.baselines.keyword_matching import match_sentence
+# Necessary to hide the pygame import message
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
-from intent_models.ml_models.random_forest import predict_single_input_rf
-from intent_models.ml_models.mlp import predict_single_input_mlp
+from intent_models.ml_models.random_forest import predict_single_input_rf  # noqa
+from intent_models.baselines.keyword_matching import match_sentence  # noqa
+from intent_models.ml_models.mlp import predict_single_input_mlp  # noqa
+from helpers import prep_user_input, de_emojify, print_verbose  # noqa
+from Levenshtein import distance  # noqa
+from typing import TypedDict  # noqa
+from textwrap import dedent  # noqa
+from io import BytesIO  # noqa
+from gtts import gTTS  # noqa
+
+import speech_recognition as sr  # noqa
+import pandas as pd  # noqa
+import numpy as np  # noqa
+import random  # noqa
+import pygame  # noqa
+import time  # noqa
+import re  # noqa
 
 information = pd.read_csv("data/restaurant_info.csv")
 
@@ -37,6 +47,11 @@ class IntentType:
 class DialogConfig(TypedDict):
     intent_model: str  # Type of intent model, default is RandomForest
     verbose: bool  # Whether to print out debug information
+    tts: bool  # Wheter to convert the system output to speech
+    caps: bool  # Wheter to print the system output in all caps
+    levenshtein: int  # Integer defining the desired levenshtein distance
+    delay: float  # Optional delay before the system responds
+    speech: bool  # Wheter to take user input as speech or not
 
 
 class Message(TypedDict):
@@ -139,8 +154,32 @@ class DialogManager:
                 self.__respond("I'm sorry, I don't understand.")
 
     def __respond(self, input):
+        if self.dialog_config["delay"] > 0.0:
+            self.__handle_delay()
+
+        if self.dialog_config["caps"]:
+            input = input.upper()
+
         self.__add_message(None, input, "bot")
         print(f"\N{robot face} Bot: {input}")
+
+        if self.dialog_config["tts"]:
+            # Convert text to speech
+            mp3_fp = BytesIO()
+            tts = gTTS(de_emojify(input), lang="en", tld="com")
+            tts.write_to_fp(mp3_fp)
+
+            # Rewind to beginning of the audio bytes
+            mp3_fp.seek(0)
+
+            # Play audio
+            pygame.mixer.init(frequency=44100)
+            pygame.mixer.music.load(mp3_fp, "mp3")
+            pygame.mixer.music.play()
+
+            # Wait for audio to finish
+            while pygame.mixer.music.get_busy():
+                pygame.time.wait(100)  # ms
 
     def __print_message_history(self, verbose: bool):
         if verbose:
@@ -161,13 +200,52 @@ class DialogManager:
         self.__print_message_history(self.dialog_config["verbose"])
         self.done = True
 
+    def __handle_delay(self):
+        start_time = time.time()
+        ctr = 1
+        while time.time() - start_time < self.dialog_config["delay"]:
+            if ctr > 3:
+                print(f"\N{robot face} Bot: {' ' * ctr}", end="\r")
+                ctr = 0
+            print(f"\N{robot face} Bot: {'.' * ctr}", end="\r")
+            ctr += 1
+            time.sleep(0.1)
+
+    def __handle_speech(self):
+        recognizer = sr.Recognizer()
+
+        # Capture audio from the microphone
+        with sr.Microphone() as source:
+            audio = recognizer.listen(
+                source, timeout=None, phrase_time_limit=5
+            )  # Adjust the timeout as needed
+        try:
+            # Recognize the audio using Google Web Speech API
+            user_input = recognizer.recognize_google(audio)
+            # Write user input letter for letter
+            [(print(c, end="", flush=True), time.sleep(0.02)) for c in user_input]
+            print()
+
+            return user_input
+
+        except sr.UnknownValueError:
+            self.__respond("Sorry, I couldn't understand what you said.")
+            print("\r\N{bust in silhouette} User: ", end="")
+            return self.__handle_speech()
+        except sr.RequestError as e:
+            print_verbose("Sorry, an error occurred: {e}")
+
     # -------------- Public methods --------------
     def start_dialog(self):
         self.__respond(self.message_templates["welcome"])
         while not self.done:
             # Get the user input on the same line as the prompt
             print("\r\N{bust in silhouette} User: ", end="")
-            user_input = input()
+            if self.dialog_config["speech"]:
+                user_input = self.__handle_speech()
+            else:
+                user_input = input()
+
             self.__handle_input(user_input)
 
     # -------------- Internal methods --------------
@@ -238,7 +316,7 @@ class DialogManager:
             return False
 
         # else provide the user with the information
-        self.__respond(self, output)
+        self.__respond(output)
 
         return True
 
@@ -258,8 +336,8 @@ class DialogManager:
             if dist == 0:
                 return
 
-            # If distance is less than 2, then we have a match
-            if dist <= 2:
+            # If distance is less than a certain distance (default = 2), then we have a match
+            if dist <= self.dialog_config["levenshtein"]:
                 matches.append(
                     {
                         "option": option,
@@ -311,8 +389,10 @@ class DialogManager:
         if not found_something:
             print_verbose(self.dialog_config["verbose"], "No exact matches found.")
 
-            # concat all option lists to look for mistyped ones
-            all_options = [*self.food_options, *self.area_options, *self.price_options]
+            # concat all options to look for mistyped ones
+            all_options = np.concatenate(
+                (self.food_options, self.area_options, self.price_options)
+            )
 
             # find closest with levenshtein distance (max = 3)
             for i in input_string.split(" "):
