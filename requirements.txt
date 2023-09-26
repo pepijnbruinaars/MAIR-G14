@@ -7,4 +7,5 @@ pandas==1.4.4
 pygame==2.5.2
 python_Levenshtein==0.21.1
 scikit_learn==1.2.2
+SpeechRecognition==3.10.0
 torch==2.0.1
