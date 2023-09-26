@@ -157,9 +157,9 @@ class DialogManager:
             ctr = 1
             while time.time() - start_time < self.dialog_config["delay"]:
                 if ctr > 3:
-                    print(f" " * ctr, end="\r")
+                    print(f"\N{robot face} Bot: {' ' * ctr}", end="\r")
                     ctr = 0
-                print(f"." * ctr, end="\r")
+                print(f"\N{robot face} Bot: {'.' * ctr}", end="\r")
                 ctr += 1
                 time.sleep(0.1)
 
