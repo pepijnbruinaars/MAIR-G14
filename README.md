@@ -1,5 +1,14 @@
 # MAIR-G14
 Welcome to the repository for our MAIR project. This project is a chatbot which can help you find a restaurant.
+
+## Functionality
+The chatbot can help you find a restaurant based on the following criteria:
+- Location
+- Cuisine
+- Price range
+
+The chatbot will follow the following state-transition diagram to retrieve your preferences and provide you with a restaurant recommendation:
+![State-transition diagram](figures/state-diagram-combined.jpg)
 ## Installing and running
 In general, the following instructions should work on any system.
 1. Open the root directory of the project `MAIR-G14`.
