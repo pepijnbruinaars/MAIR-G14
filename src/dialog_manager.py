@@ -233,7 +233,7 @@ class DialogManager:
             print("\r\N{bust in silhouette} User: ", end="")
             return self.__handle_speech()
         except sr.RequestError as e:
-            print_verbose("Sorry, an error occurred: {e}")
+            print_verbose(f"Sorry, an error occurred: {e}")
 
     # -------------- Public methods --------------
     def start_dialog(self):
