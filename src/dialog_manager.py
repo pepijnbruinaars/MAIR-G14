@@ -71,8 +71,17 @@ class DialogManager:
         self.done = False
         self.message_history: list[Message] = []
         self.message_templates = {
-            "welcome": "Hello, I am a restaurant recommender chatbot \N{rocket}. How can I help you?",
-            # "confirmfoodtype": f"",
+            "welcome": (
+                """Hello, I am a restaurant recommender chatbot \N{rocket}.
+            \r\tTo exit, just type 'exit'!
+            \r\tYou can express the following preferences:
+            - food
+            - area
+            - price range
+            \r\tWhat would you like to eat?"""
+            ),
+            "hello": "\N{waving hand sign} Hi! How can I help you?",
+            "thankyou": "You're welcome! \N{grinning face with smiling eyes}",
         }
         self.stored_preferences = {
             "food": None,
@@ -109,17 +118,17 @@ class DialogManager:
         # Process user input
         prepped_user_input = prep_user_input(user_input)
 
+        # Check if user wants to exit
+        if prepped_user_input == "exit":
+            self.__handle_exit()
+            return
+
         # Check user intent
         intent = self.__get_intent(prepped_user_input)
         self.__add_message(intent, prepped_user_input, "user")
 
         # extract the prefences for a restaurant the user might have uttered
         self.__extract_preference(prepped_user_input)
-
-        # Check if user wants to exit
-        if prepped_user_input == "exit":
-            self.__handle_exit()
-            return
 
         # Logging for debugging
 
@@ -141,6 +150,10 @@ class DialogManager:
                 self.__handle_exit()
             case IntentType.INFORM:
                 self.__handle_inform(restaurant)
+            case IntentType.HELLO:
+                self.__respond(self.message_templates["hello"])
+            case IntentType.THANKYOU:
+                self.__respond(self.message_templates["thankyou"])
             case IntentType.REQUEST:
                 if restaurant is not None:
                     self.__handle_request(prepped_user_input, restaurant)
