@@ -119,8 +119,10 @@ class DialogManager:
         # Handle user intent
         match intent:
             case IntentType.ACK:
+                # TODO: This is just placeholder
                 self.__respond("You're welcome!")
             case IntentType.AFFIRM:
+                # TODO: This is just placeholder
                 self.__respond("Great!")
             case IntentType.BYE:
                 self.__handle_exit()
@@ -130,7 +132,7 @@ class DialogManager:
                 self.__respond(self.message_templates["hello"])
             case IntentType.THANKYOU:
                 self.__respond(self.message_templates["thankyou"])
-            case IntentType.NEGATE:
+            case IntentType.NEGATE, IntentType.DENY:
                 self.__handle_negate()
             case IntentType.REQUEST:
                 # We can only handle requests if we have a restaurant
@@ -138,6 +140,20 @@ class DialogManager:
                     self.__handle_request(prepped_user_input, self.stored_restaurant)
                 else:
                     self.__respond(self.message_templates["err_req"])
+            case IntentType.REQMORE:
+                # We can only handle requests if we have a restaurant, and other options
+                if (
+                    self.stored_restaurant is not None
+                    and self.stored_restaurant_options is not None
+                ):
+                    self.__respond("Here are some other options:")
+                    self.__show_matches(self.stored_restaurant_options)
+                else:
+                    self.__respond(self.message_templates["err_req"])
+            case IntentType.REPEAT:
+                # Just respond the latest message sent by the bot again
+                last_message = self.message_history[-2]
+                self.__respond(last_message["text"])
             case IntentType.RESTART:
                 self.stored_restaurant = None
                 self.stored_restaurant_options = None
@@ -146,6 +162,9 @@ class DialogManager:
                     "pricerange": None,
                     "area": None,
                 }
+                self.__respond(
+                    "Your preferences have been reset! What can I do for you?"
+                )
             case _:  # Default case
                 self.__respond("I'm sorry, I don't understand.")
 

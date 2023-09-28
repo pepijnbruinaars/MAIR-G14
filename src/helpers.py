@@ -86,6 +86,7 @@ def prep_user_input(user_input: str):
                     word not in stopwords.words("english")
                     or word == "no"
                     or word == "yes"
+                    or word == "more"
                 )
             ]
         )
@@ -100,6 +101,7 @@ def prep_user_input(user_input: str):
                     word not in stopwords.words("english")
                     or word == "no"
                     or word == "yes"
+                    or word == "more"
                 )
             ]
         )
