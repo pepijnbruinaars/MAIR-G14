@@ -166,33 +166,19 @@ class DialogManager:
             case _:  # Default case
                 self.__respond("I'm sorry, I don't understand.")
 
-    def __respond(self, input):
-        if self.dialog_config["delay"] > 0.0:
-            self.__handle_delay()
+    def __respond(self, response: str):
+        # Handle delay
+        self.__handle_delay() if self.dialog_config["delay"] > 0.0 else None
 
-        if self.dialog_config["caps"]:
-            input = input.upper()
+        # Handle caps
+        response = response.upper() if self.dialog_config["caps"] else response
 
-        self.__add_message(None, input, "bot")
-        print(f"\N{robot face} Bot: {input}")
+        # Add message to history and display
+        self.__add_message(None, response, "bot")
+        print(f"\N{robot face} Bot: {response}")
 
-        if self.dialog_config["tts"]:
-            # Convert text to speech
-            mp3_fp = BytesIO()
-            tts = gTTS(de_emojify(input), lang="en", tld="com")
-            tts.write_to_fp(mp3_fp)
-
-            # Rewind to beginning of the audio bytes
-            mp3_fp.seek(0)
-
-            # Play audio
-            pygame.mixer.init(frequency=44100)
-            pygame.mixer.music.load(mp3_fp, "mp3")
-            pygame.mixer.music.play()
-
-            # Wait for audio to finish
-            while pygame.mixer.music.get_busy():
-                pygame.time.wait(100)  # ms
+        # Handle text to speech
+        self.__handle_tts(response) if self.dialog_config["tts"] else None
 
     def __print_message_history(self, verbose: bool):
         if verbose:
@@ -215,13 +201,13 @@ class DialogManager:
 
     def __handle_delay(self):
         start_time = time.time()
-        ctr = 1
+        counter = 1
         while time.time() - start_time < self.dialog_config["delay"]:
-            if ctr > 3:
-                print(f"\N{robot face} Bot: {' ' * ctr}", end="\r")
-                ctr = 0
-            print(f"\N{robot face} Bot: {'.' * ctr}", end="\r")
-            ctr += 1
+            if counter > 3:
+                print(f"\N{robot face} Bot: {' ' * counter}", end="\r")
+                counter = 0
+            print(f"\N{robot face} Bot: {'.' * counter}", end="\r")
+            counter += 1
             time.sleep(0.1)
 
     def __handle_speech(self):
@@ -254,10 +240,9 @@ class DialogManager:
         while not self.done:
             # Get the user input on the same line as the prompt
             print("\r\N{bust in silhouette} User: ", end="")
-            if self.dialog_config["speech"]:
-                user_input = self.__handle_speech()
-            else:
-                user_input = input()
+            user_input = (
+                self.__handle_speech() if self.dialog_config["speech"] else input()
+            )
 
             self.__handle_input(user_input)
 
@@ -333,43 +318,26 @@ class DialogManager:
 
         return True
 
-    # -------------- Helper methods --------------
-    def __get_levenshtein_alternatives(self, word, options) -> list[dict]:
-        matches = []
-        options_copy = options.copy()  # Copy options to avoid mutating original list
-        options_copy = [
-            prep_user_input(option) for option in options_copy
-        ]  # Preprocess options just in case
-        random.shuffle(options_copy)  # Shuffle options to avoid bias
+    # -------------- Speech methods --------------
+    def __handle_tts(self, response: str):
+        # Convert text to speech
+        mp3_fp = BytesIO()
+        tts = gTTS(de_emojify(response), lang="en", tld="com")
+        tts.write_to_fp(mp3_fp)
 
-        # Loop through options and calculate levenshtein distance
-        for option in options_copy:
-            dist = distance(word, option)
-            # If distance is 0, then we have a perfect match
-            if dist == 0:
-                return
+        # Rewind to beginning of the audio bytes
+        mp3_fp.seek(0)
 
-            # If distance is less than a certain distance (default = 2), then we have a match
-            if dist <= self.dialog_config["levenshtein"]:
-                matches.append(
-                    {
-                        "option": option,
-                        "distance": dist,
-                    }
-                )
+        # Play audio
+        pygame.mixer.init(frequency=44100)
+        pygame.mixer.music.load(mp3_fp, "mp3")
+        pygame.mixer.music.play()
 
-        # Sort matches by distance for easy handling
-        matches.sort(key=lambda x: x["distance"])
-        return matches
+        # Wait for audio to finish
+        while pygame.mixer.music.get_busy():
+            pygame.time.wait(100)  # ms
 
-    def __show_matches(self, matches) -> None:
-        for match in matches:
-            # Upper case first letter of option
-            if match["option"] is not None:
-                match["option"] = match["option"][0].upper() + match["option"][1:]
-                print("\t- " + match["option"] + "?")
-                self.__add_message(None, match["option"], "bot")
-
+    # -------------- Preference and lookup methods --------------
     def __extract_preference(self, input_string: str) -> None:
         # make sure input is in lower case
         input_string = input_string.lower()
@@ -484,6 +452,43 @@ class DialogManager:
                 {restaurant['food']} restaurant in the {restaurant['area']} of town."""
             ).replace("\n", " ")
         return "I'm sorry, I don't know any restaurants that match your preferences."
+
+    # -------------- Word helper methods --------------
+    def __get_levenshtein_alternatives(self, word, options) -> list[dict]:
+        matches = []
+        options_copy = options.copy()  # Copy options to avoid mutating original list
+        options_copy = [
+            prep_user_input(option) for option in options_copy
+        ]  # Preprocess options just in case
+        random.shuffle(options_copy)  # Shuffle options to avoid bias
+
+        # Loop through options and calculate levenshtein distance
+        for option in options_copy:
+            dist = distance(word, option)
+            # If distance is 0, then we have a perfect match
+            if dist == 0:
+                return
+
+            # If distance is less than a certain distance (default = 2), then we have a match
+            if dist <= self.dialog_config["levenshtein"]:
+                matches.append(
+                    {
+                        "option": option,
+                        "distance": dist,
+                    }
+                )
+
+        # Sort matches by distance for easy handling
+        matches.sort(key=lambda x: x["distance"])
+        return matches
+
+    def __show_matches(self, matches) -> None:
+        for match in matches:
+            # Upper case first letter of option
+            if match["option"] is not None:
+                match["option"] = match["option"][0].upper() + match["option"][1:]
+                print("\t- " + match["option"] + "?")
+                self.__add_message(None, match["option"], "bot")
 
     def __get_word_prefix(self, word):
         """Function which a or an based on the first letter of a word
