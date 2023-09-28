@@ -28,6 +28,8 @@ def get_message_templates():
             " any restaurants that match your preferences."
         ),
         "err_inf_no_result": "I'm sorry, I can't find any restaurants that match your preferences.",
+        "err_neg_next_step": "I'm sorry \N{pensive face}, I can't help you with that.",
+        "err_neg_no_options": "I'm sorry \N{pensive face}, there are no other options that match your preferences.",
     }
 
 

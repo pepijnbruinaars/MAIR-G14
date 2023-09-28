@@ -130,6 +130,8 @@ class DialogManager:
                 self.__respond(self.message_templates["hello"])
             case IntentType.THANKYOU:
                 self.__respond(self.message_templates["thankyou"])
+            case IntentType.NEGATE:
+                self.__handle_negate()
             case IntentType.REQUEST:
                 # We can only handle requests if we have a restaurant
                 if self.stored_restaurant is not None:
@@ -339,8 +341,23 @@ class DialogManager:
 
         # else provide the user with the information
         self.__respond(output)
+        self.__respond("Is there anything else I can help you with?")
 
         return True
+
+    def __handle_negate(self):
+        # If we have a restaurant, then we can suggest other options
+        if self.stored_restaurant is not None:
+            # If we have other options, suggest one
+            if self.stored_restaurant_options is not None:
+                self.__respond("Here are some other options:")
+                self.__show_matches(self.stored_restaurant_options)
+            # If we don't have other options, then we can't help the user
+            else:
+                self.__respond(self.message_templates["err_neg_no_options"])
+        # If we don't have a restaurant, then we can't help the user
+        else:
+            self.__respond(self.message_templates["err_neg_next_step"])
 
     # -------------- Speech methods --------------
     def __handle_tts(self, response: str):
@@ -466,6 +483,11 @@ class DialogManager:
             self.__format_restaurant_info(restaurant_choice),
         )
         print_verbose(self.dialog_config["verbose"], "---- Other options ----")
+
+        if other_options is None:
+            print_verbose(self.dialog_config["verbose"], "None")
+            return restaurant_choice, other_options
+
         for i, option in enumerate(other_options):
             print_verbose(self.dialog_config["verbose"], f"Option {i + 1}:")
             print_verbose(
