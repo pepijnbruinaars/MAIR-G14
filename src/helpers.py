@@ -80,7 +80,11 @@ def prep_user_input(user_input: str):
             [
                 word
                 for word in user_input.split()
-                if word not in stopwords.words("english")
+                if (
+                    word not in stopwords.words("english")
+                    or word == "no"
+                    or word == "yes"
+                )
             ]
         )
     except LookupError:
@@ -90,7 +94,11 @@ def prep_user_input(user_input: str):
             [
                 word
                 for word in user_input.split()
-                if word not in stopwords.words("english")
+                if (
+                    word not in stopwords.words("english")
+                    or word == "no"
+                    or word == "yes"
+                )
             ]
         )
 

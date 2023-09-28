@@ -52,11 +52,11 @@ class IntentType:
 class DialogConfig(TypedDict):
     intent_model: str  # Type of intent model, default is RandomForest
     verbose: bool  # Whether to print out debug information
-    tts: bool  # Wheter to convert the system output to speech
-    caps: bool  # Wheter to print the system output in all caps
+    tts: bool  # Whether to convert the system output to speech
+    caps: bool  # Whether to print the system output in all caps
     levenshtein: int  # Integer defining the desired levenshtein distance
     delay: float  # Optional delay before the system responds
-    speech: bool  # Wheter to take user input as speech or not
+    speech: bool  # Whether to take user input as speech or not
 
 
 class Message(TypedDict):
@@ -102,7 +102,7 @@ class DialogManager:
 
         # Check if user wants to exit
         if prepped_user_input == "exit":
-            self.__add_message(None, prepped_user_input, "User")
+            self.__add_message("exit", prepped_user_input, "User")
             self.__handle_exit()
             return
 
@@ -137,6 +137,8 @@ class DialogManager:
                 else:
                     self.__respond(self.message_templates["err_req"])
             case IntentType.RESTART:
+                self.stored_restaurant = None
+                self.stored_restaurant_options = None
                 self.stored_preferences = {
                     "food": None,
                     "pricerange": None,
@@ -159,8 +161,8 @@ class DialogManager:
         # Handle text to speech
         self.__handle_tts(response) if self.dialog_config["tts"] else None
 
-    def __print_message_history(self, verbose: bool):
-        if verbose:
+    def __print_message_history(self):
+        if self.dialog_config["verbose"]:
             print("\n------------- Message history -------------")
             for message in self.message_history:
                 emoji = (
@@ -168,14 +170,18 @@ class DialogManager:
                     if message["sender"].lower() == "bot"
                     else "\N{bust in silhouette}"
                 )
-                print(
-                    f"{emoji} {message['sender']}: {message['text']} ({message['classified_intent']})"
-                )
+                if message["classified_intent"]:
+                    print(
+                        f"{emoji} {message['sender']}: {message['text']} ({message['classified_intent']})"
+                    )
+                else:
+                    print(f"{emoji} {message['sender']}: {message['text']}")
+
             print("-------------- End of dialog -------------")
 
     def __handle_exit(self):
         self.__respond("Goodbye! \N{waving hand sign}")
-        self.__print_message_history(self.dialog_config["verbose"])
+        self.__print_message_history()
         self.done = True
 
     def __handle_delay(self):
@@ -273,8 +279,18 @@ class DialogManager:
             self.__respond(self.__get_suggestion_string(restaurant))
             return True
 
+        # If more than 1 option left, and all preferences are filled, suggest one
+        if (
+            restaurant is not None
+            and other_options is not None
+            and all(self.stored_preferences.values())
+        ):
+            self.__respond(self.__get_suggestion_string(restaurant))
+            return True
+
         # Prompt user for other preferences
         self.__prompt_other_preferences()
+        return False
 
     def __handle_request(self, prepped_user_input, restaurant) -> bool:
         # in findoutuserintent, checks for phone, addr and postcode and returns it
@@ -444,7 +460,39 @@ class DialogManager:
         if other_options is not None:
             other_options = other_options.to_dict("records")
 
+        print_verbose(self.dialog_config["verbose"], "---- First choice ----")
+        print_verbose(
+            self.dialog_config["verbose"],
+            self.__format_restaurant_info(restaurant_choice),
+        )
+        print_verbose(self.dialog_config["verbose"], "---- Other options ----")
+        for i, option in enumerate(other_options):
+            print_verbose(self.dialog_config["verbose"], f"Option {i + 1}:")
+            print_verbose(
+                self.dialog_config["verbose"],
+                self.__format_restaurant_info(option),
+            )
+
         return restaurant_choice, other_options
+
+    def __format_restaurant_info(self, restaurant):
+        """Function which formats the restaurant information
+
+        Args:
+            restaurant (_type_): The retrieved restaurant
+        """
+        if restaurant is not None:
+            return dedent(
+                f"""\
+                Name: {restaurant['restaurantname']}
+                Address: {restaurant['addr']}
+                Postcode: {restaurant['postcode']}
+                Phone number: {restaurant['phone']}
+                Type of food: {restaurant['food']}
+                Price range: {restaurant['pricerange']}
+                Area: {restaurant['area']}"""
+            )
+        return "I'm sorry, I don't know any restaurants that match your preferences."
 
     def __prompt_other_preferences(self):
         """Function which prompts the user for other preferences"""
