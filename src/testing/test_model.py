@@ -1,6 +1,6 @@
 import csv
 from helpers import load_csv_data
-from baselines.keyword_matching import match_sentence
+from intent_models.baselines.keyword_matching import match_sentence
 
 
 def test_models():
