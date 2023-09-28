@@ -1,4 +1,10 @@
 import os
+from helpers import (
+    get_message_templates,
+    prep_user_input,
+    de_emojify,
+    print_verbose,
+)  # noqa
 
 # Necessary to hide the pygame import message
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
@@ -6,7 +12,6 @@ os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 from intent_models.ml_models.random_forest import predict_single_input_rf  # noqa
 from intent_models.baselines.keyword_matching import match_sentence  # noqa
 from intent_models.ml_models.mlp import predict_single_input_mlp  # noqa
-from helpers import prep_user_input, de_emojify, print_verbose  # noqa
 from Levenshtein import distance  # noqa
 from typing import TypedDict  # noqa
 from textwrap import dedent  # noqa
@@ -70,19 +75,7 @@ class DialogManager:
         self.dialog_config = dialog_config
         self.done = False
         self.message_history: list[Message] = []
-        self.message_templates = {
-            "welcome": (
-                """Hello, I am a restaurant recommender chatbot \N{rocket}.
-            \r\tTo exit, just type 'exit'!
-            \r\tYou can express the following preferences:
-            - food
-            - area
-            - price range
-            \r\tWhat would you like to eat?"""
-            ),
-            "hello": "\N{waving hand sign} Hi! How can I help you?",
-            "thankyou": "You're welcome! \N{grinning face with smiling eyes}",
-        }
+        self.message_templates = get_message_templates()
         self.stored_preferences = {
             "food": None,
             "pricerange": None,
@@ -155,8 +148,11 @@ class DialogManager:
             case IntentType.THANKYOU:
                 self.__respond(self.message_templates["thankyou"])
             case IntentType.REQUEST:
+                # We can only handle requests if we have a restaurant
                 if restaurant is not None:
                     self.__handle_request(prepped_user_input, restaurant)
+                else:
+                    self.__respond(self.message_templates["err_req"])
             case IntentType.RESTART:
                 self.stored_preferences = {
                     "food": None,
@@ -237,6 +233,11 @@ class DialogManager:
     # -------------- Public methods --------------
     def start_dialog(self):
         self.__respond(self.message_templates["welcome"])
+        self.__respond("What can I do for you?")
+        self.__dialog_loop()
+
+    # -------------- Internal methods --------------
+    def __dialog_loop(self):
         while not self.done:
             # Get the user input on the same line as the prompt
             print("\r\N{bust in silhouette} User: ", end="")
@@ -246,7 +247,6 @@ class DialogManager:
 
             self.__handle_input(user_input)
 
-    # -------------- Internal methods --------------
     def __get_intent(self, prepped_user_input):
         match self.dialog_config["intent_model"]:
             case "RF":
@@ -267,6 +267,7 @@ class DialogManager:
             }
         )
 
+    # -------------- Intent handling methods --------------
     def __handle_inform(self, restaurant) -> bool:
         self.__respond(self.__get_suggestion_string(restaurant))
 

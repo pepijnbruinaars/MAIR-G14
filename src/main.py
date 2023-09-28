@@ -23,7 +23,7 @@ if __name__ == "__main__":
         "-m",
         "--model",
         help="Select the classification model to be used: RF (Random Forest), MLP (multilayer perceptron), Majority",
-        default="RF",
+        default="neural",
         dest="intent_model",
     )
     parser.add_argument(

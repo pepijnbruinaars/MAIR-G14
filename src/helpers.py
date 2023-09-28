@@ -9,6 +9,27 @@ import os
 import re
 
 
+def get_message_templates():
+    return {
+        # Intent messages
+        "welcome": (
+            """Hello, I am a restaurant recommender chatbot \N{rocket}.
+            \r\tTo exit, just type 'exit'!
+            \r\tI can find you a restaurant using the following preferences:
+            - food
+            - area
+            - price range"""
+        ),
+        "hello": "\N{waving hand sign} Hi! How can I help you?",
+        "thankyou": "You're welcome! \N{grinning face with smiling eyes}",
+        # Error messages
+        "err_req": (
+            "I'm sorry, I can't answer your question because I don't know"
+            " any restaurants that match your preferences."
+        ),
+    }
+
+
 def load_csv_data(filepath):
     data = {}
     with open(filepath, "r") as csv_file:
