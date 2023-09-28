@@ -165,6 +165,19 @@ class DialogManager:
                 self.__respond(
                     "Your preferences have been reset! What can I do for you?"
                 )
+            case IntentType.REQALTS:
+                # We can only handle requests if we have a restaurant, and other options
+                if (
+                    self.stored_restaurant is not None
+                    and self.stored_restaurant_options is not None
+                ):
+                    self.__respond("Here are some other options:")
+                    self.__show_matches(self.stored_restaurant_options)
+                else:
+                    self.__respond(self.message_templates["err_req"])
+            case IntentType.CONFIRM:
+                # TODO: This is just placeholder
+                self.__respond("Great!")
             case _:  # Default case
                 self.__respond("I'm sorry, I don't understand.")
 
@@ -177,7 +190,12 @@ class DialogManager:
 
         # Add message to history and display
         self.__add_message(None, response, "Bot")
-        print(f"\N{robot face} Bot: {response}")
+        # Show response word for word to simulate typing
+        print("\r\N{robot face} Bot: ", end="")
+        [
+            (print(c, end="", flush=True), time.sleep(random.uniform(0.005, 0.08)))
+            for c in response
+        ]
 
         # Handle text to speech
         self.__handle_tts(response) if self.dialog_config["tts"] else None
@@ -242,8 +260,9 @@ class DialogManager:
 
     # -------------- Public methods --------------
     def start_dialog(self):
-        self.__respond(self.message_templates["welcome"])
-        self.__respond("What can I do for you?")
+        self.__respond(
+            self.message_templates["welcome"] + "\n" + "\tWhat can I do for you?"
+        )
         try:
             self.__dialog_loop()
         except KeyboardInterrupt:
@@ -253,7 +272,7 @@ class DialogManager:
     def __dialog_loop(self):
         while not self.done:
             # Get the user input on the same line as the prompt
-            print("\r\N{bust in silhouette} User: ", end="")
+            print("\n\N{bust in silhouette} User: ", end="")
             user_input = (
                 self.__handle_speech() if self.dialog_config["speech"] else input()
             )
