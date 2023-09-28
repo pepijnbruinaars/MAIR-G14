@@ -27,6 +27,7 @@ def get_message_templates():
             "I'm sorry, I can't answer your question because I don't know"
             " any restaurants that match your preferences."
         ),
+        "err_inf_no_result": "I'm sorry, I can't find any restaurants that match your preferences.",
     }
 
 
@@ -116,8 +117,7 @@ def de_emojify(text):
 
 
 def print_verbose(verbose: bool, message: str):
-    if verbose:
-        print(message)
+    print(message) if verbose else None
 
 
 def check_models(args: argparse.Namespace):

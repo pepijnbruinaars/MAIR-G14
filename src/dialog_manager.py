@@ -74,34 +74,23 @@ class DialogManager:
     def __init__(self, dialog_config: DialogConfig):
         self.dialog_config = dialog_config
         self.done = False
-        self.message_history: list[Message] = []
         self.message_templates = get_message_templates()
+        self.message_history: list[Message] = []
+
         self.stored_preferences = {
             "food": None,
             "pricerange": None,
             "area": None,
         }
+
+        # Stored restaurant information
+        self.stored_restaurant = None
+        self.stored_restaurant_options = None
+
+        # Preference options
         self.food_options = information["food"].unique()
         self.price_options = information["pricerange"].unique()
         self.area_options = ["west", "north", "south", "centre", "east"]
-
-        self.options = [
-            "Danish",
-            "Spanish",
-            "Italian",
-            "phone",
-            "number",
-            "telephone",
-            "contact",
-            "address",
-            "located",
-            "location",
-            "where",
-            "postcode",
-            "post code",
-            "post",
-            "code",
-        ]
 
     def __repr__(self):
         return f"DialogManager({self.dialog_config})"
@@ -113,25 +102,19 @@ class DialogManager:
 
         # Check if user wants to exit
         if prepped_user_input == "exit":
+            self.__add_message(None, prepped_user_input, "User")
             self.__handle_exit()
             return
 
         # Check user intent
         intent = self.__get_intent(prepped_user_input)
-        self.__add_message(intent, prepped_user_input, "user")
-
-        # extract the prefences for a restaurant the user might have uttered
-        self.__extract_preference(prepped_user_input)
+        self.__add_message(intent, prepped_user_input, "User")
 
         # Logging for debugging
-
         print_verbose(self.dialog_config["verbose"], f"Intent: {intent}")
         print_verbose(
             self.dialog_config["verbose"], f"User input: {prepped_user_input}"
         )
-
-        # Retrieve restaurant based on preferences
-        restaurant, other_options = self.__retrieve_restaurant(self.stored_preferences)
 
         # Handle user intent
         match intent:
@@ -142,15 +125,15 @@ class DialogManager:
             case IntentType.BYE:
                 self.__handle_exit()
             case IntentType.INFORM:
-                self.__handle_inform(restaurant)
+                self.__handle_inform(prepped_user_input)
             case IntentType.HELLO:
                 self.__respond(self.message_templates["hello"])
             case IntentType.THANKYOU:
                 self.__respond(self.message_templates["thankyou"])
             case IntentType.REQUEST:
                 # We can only handle requests if we have a restaurant
-                if restaurant is not None:
-                    self.__handle_request(prepped_user_input, restaurant)
+                if self.stored_restaurant is not None:
+                    self.__handle_request(prepped_user_input, self.stored_restaurant)
                 else:
                     self.__respond(self.message_templates["err_req"])
             case IntentType.RESTART:
@@ -170,7 +153,7 @@ class DialogManager:
         response = response.upper() if self.dialog_config["caps"] else response
 
         # Add message to history and display
-        self.__add_message(None, response, "bot")
+        self.__add_message(None, response, "Bot")
         print(f"\N{robot face} Bot: {response}")
 
         # Handle text to speech
@@ -182,7 +165,7 @@ class DialogManager:
             for message in self.message_history:
                 emoji = (
                     "\N{robot face}"
-                    if message["sender"] == "bot"
+                    if message["sender"].lower() == "bot"
                     else "\N{bust in silhouette}"
                 )
                 print(
@@ -234,7 +217,10 @@ class DialogManager:
     def start_dialog(self):
         self.__respond(self.message_templates["welcome"])
         self.__respond("What can I do for you?")
-        self.__dialog_loop()
+        try:
+            self.__dialog_loop()
+        except KeyboardInterrupt:
+            self.__handle_exit()
 
     # -------------- Internal methods --------------
     def __dialog_loop(self):
@@ -268,8 +254,27 @@ class DialogManager:
         )
 
     # -------------- Intent handling methods --------------
-    def __handle_inform(self, restaurant) -> bool:
-        self.__respond(self.__get_suggestion_string(restaurant))
+    def __handle_inform(self, prepped_user_input) -> bool:
+        # extract the prefences for a restaurant the user might have uttered
+        self.__extract_preference(prepped_user_input)
+
+        # Update restaurant information
+        restaurant, other_options = self.__retrieve_restaurant(self.stored_preferences)
+        self.stored_restaurant = restaurant
+        self.stored_restaurant_options = other_options
+
+        # If no options left, and no restaurant found, then we can't help the user
+        if restaurant is None and other_options is None:
+            self.__respond(self.message_templates["err_inf_no_result"])
+            return False
+
+        # If 1 option left, suggest it
+        if restaurant is not None and other_options is None:
+            self.__respond(self.__get_suggestion_string(restaurant))
+            return True
+
+        # Prompt user for other preferences
+        self.__prompt_other_preferences()
 
     def __handle_request(self, prepped_user_input, restaurant) -> bool:
         # in findoutuserintent, checks for phone, addr and postcode and returns it
@@ -290,7 +295,9 @@ class DialogManager:
             # check for address
             if match in prepped_user_input:
                 if len(output) == 0:
-                    output = f"The {restaurant['name']} is on {restaurant['addr']}. "
+                    output = (
+                        f"{restaurant['restaurantname']} is on {restaurant['addr']}. "
+                    )
                 else:
                     # respond differently if phone number is asked as well
                     output = (
@@ -302,7 +309,7 @@ class DialogManager:
             # check for postcode
             if match in prepped_user_input:
                 if len(output) == 0:
-                    output = f"The post code of {restaurant['name']} is {restaurant['postcode']}."
+                    output = f"The post code of {restaurant['restaurantname']} is {restaurant['postcode']}."
                 else:
                     # respond differently if phone number or address is asked as well
                     output = (
@@ -439,6 +446,16 @@ class DialogManager:
 
         return restaurant_choice, other_options
 
+    def __prompt_other_preferences(self):
+        """Function which prompts the user for other preferences"""
+        # Check for which preferences we have to prompt
+        if self.stored_preferences["food"] is None:
+            self.__respond("What type of food do you prefer?")
+        elif self.stored_preferences["pricerange"] is None:
+            self.__respond("What price range do you prefer?")
+        elif self.stored_preferences["area"] is None:
+            self.__respond("What area of town do you prefer?")
+
     def __get_suggestion_string(self, restaurant):
         """Function which returns a string with a restaurant suggestion
 
@@ -449,8 +466,10 @@ class DialogManager:
             # Remove new lines from the returned string
             return dedent(
                 f"""\
-                I suggest you go to {restaurant['restaurantname']}. It's {self.__get_word_prefix(restaurant['food'])}
-                {restaurant['food']} restaurant in the {restaurant['area']} of town."""
+                I suggest you go to {restaurant['restaurantname']}.
+                It's {self.__get_word_prefix(restaurant['pricerange'])}
+                {'moderately priced' if restaurant['pricerange'] == 'moderate' else restaurant['pricerange']}
+                restaurant and serves {restaurant['food']} food. It is located in the {restaurant['area']} of town."""
             ).replace("\n", " ")
         return "I'm sorry, I don't know any restaurants that match your preferences."
 
@@ -489,7 +508,7 @@ class DialogManager:
             if match["option"] is not None:
                 match["option"] = match["option"][0].upper() + match["option"][1:]
                 print("\t- " + match["option"] + "?")
-                self.__add_message(None, match["option"], "bot")
+                self.__add_message(None, match["option"], "Bot")
 
     def __get_word_prefix(self, word):
         """Function which a or an based on the first letter of a word
