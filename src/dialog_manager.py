@@ -92,6 +92,7 @@ class DialogManager:
         self.food_options = information["food"].unique().tolist()
         self.price_options = information["pricerange"].unique().tolist()
         self.area_options = ["west", "north", "south", "centre", "east"]
+        self.additional_query = False
 
         self.options = [
             "Danish",
@@ -137,8 +138,7 @@ class DialogManager:
         print_verbose(
             self.dialog_config["verbose"], f"User input: {prepped_user_input}"
         )
-        dfdf = 1
-        print(dfdf)
+        
         # Retrieve restaurant based on preferences
         restaurant, other_options = self.__retrieve_restaurant(self.stored_preferences)
 
@@ -151,7 +151,11 @@ class DialogManager:
             case IntentType.BYE:
                 self.__handle_exit()
             case IntentType.INFORM:
-                self.__handle_inform(restaurant)
+                if not self.additional_query:
+                    self.__respond("Do you have any additional requirements?")
+                    self.additional_query = True
+                else:
+                    self.__handle_inform(restaurant)
             case IntentType.HELLO:
                 self.__respond(self.message_templates["hello"])
             case IntentType.THANKYOU:
@@ -165,7 +169,8 @@ class DialogManager:
                     "pricerange": None,
                     "area": None,
                 }
-            case intent:  # Default case
+                self.additional_query = False
+            case _:  # Default case
                 self.__respond("I'm sorry, I don't understand.")
 
     def __respond(self, input):
