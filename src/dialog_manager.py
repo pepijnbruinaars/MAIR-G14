@@ -308,7 +308,7 @@ class DialogManager:
                 else:
                     # respond differently if phone number is asked as well
                     output = (
-                            output[:-1] + f" and it is located on {restaurant['addr']}."
+                        output[:-1] + f" and it is located on {restaurant['addr']}."
                     )
                 break
 
@@ -320,7 +320,7 @@ class DialogManager:
                 else:
                     # respond differently if phone number or address is asked as well
                     output = (
-                            output[:-1] + f", its postcode is {restaurant['postcode']}."
+                        output[:-1] + f", its postcode is {restaurant['postcode']}."
                     )
                 break
 
@@ -471,34 +471,33 @@ class DialogManager:
         return restaurant_choice, other_options
 
     def __additional_preferences(self, candidate_restaurants, requirements):
-
         """Function to filter by additional preferences
 
-            Arguments:
-                Candidate restaurants: pd.dataframe
-                Requirements: dictionary with keys
-                    "touristic": boolean
-                    "assigned_seats": boolean
-                    "children": boolean
-                    "romantic": boolean
+        Arguments:
+            Candidate restaurants: pd.dataframe
+            Requirements: dictionary with keys
+                "touristic": boolean
+                "assigned_seats": boolean
+                "children": boolean
+                "romantic": boolean
 
-            Requirements are satisfied or not based on values in candidate_restaurants dataframe
-            Below are the variable names and values used for this code
-                "pricerange": "cheap"
-                "food_quality": "good"
-                "food": "romanian"
-                "crowdedness": "busy"
-                "length_of_stay": "long"
+        Requirements are satisfied or not based on values in candidate_restaurants dataframe
+        Below are the variable names and values used for this code
+            "pricerange": "cheap"
+            "food_quality": "good"
+            "food": "romanian"
+            "crowdedness": "busy"
+            "length_of_stay": "long"
 
-            Outputs are
-                restaurant_choice: one-line pd.dataframe with the chosen restaurant
-                other_options: pd.dataframe with other options in case there are any
-                reasons_all: list of dictionaries, reasons for choice being made; can be queried
-                    by looking for the specific restaurant name as a value in the "restaurantname" key
-                    for all dictionaries in the list
+        Outputs are
+            restaurant_choice: one-line pd.dataframe with the chosen restaurant
+            other_options: pd.dataframe with other options in case there are any
+            reasons_all: list of dictionaries, reasons for choice being made; can be queried
+                by looking for the specific restaurant name as a value in the "restaurantname" key
+                for all dictionaries in the list
 
-            Raises:
-                LookupError: If no restaurant is found
+        Raises:
+            LookupError: If no restaurant is found
 
         """
 
@@ -507,12 +506,16 @@ class DialogManager:
         restaurant_choice = None  # if multiple options, choose one
         other_options = None  # save other options in this variable
 
-        for restaurant in candidate_restaurants:  # loop over preselected restaurant options
-
+        for (
+            restaurant
+        ) in candidate_restaurants:  # loop over preselected restaurant options
             reasons = {}  # reasons for specific restaurant
 
             if requirements["touristic"]:
-                if restaurant["pricerange"] == "cheap" and restaurant["food_quality"] == "good":
+                if (
+                    restaurant["pricerange"] == "cheap"
+                    and restaurant["food_quality"] == "good"
+                ):
                     reasons["touristic"] = "cheap and good food"
                 if restaurant["food"] == "romanian":
                     break
@@ -520,7 +523,10 @@ class DialogManager:
             elif not requirements["touristic"]:
                 if restaurant["food"] == "romanian":
                     reasons["not touristic"] = "romanian"  # add this to reasoning
-                elif restaurant["pricerange"] == "cheap" and restaurant["food_quality"] == "good":
+                elif (
+                    restaurant["pricerange"] == "cheap"
+                    and restaurant["food_quality"] == "good"
+                ):
                     break  # restaurant touristic, try next one
 
             if requirements["assigned_seats"]:
@@ -529,7 +535,9 @@ class DialogManager:
                 else:
                     break
 
-            elif not requirements["assigned_seats"]:  # do people ever prefer assigned seating?
+            elif not requirements[
+                "assigned_seats"
+            ]:  # do people ever prefer assigned seating?
                 if restaurant["crowdedness"] == "busy":
                     break  # if you don't want assigned seats, busy restaurant will not work
                 else:
@@ -548,8 +556,10 @@ class DialogManager:
                     break
 
             if requirements["romantic"]:
-
-                if restaurant["crowdedness"] != "busy" and restaurant["length_of_stay"] == "long":
+                if (
+                    restaurant["crowdedness"] != "busy"
+                    and restaurant["length_of_stay"] == "long"
+                ):
                     reasons["romantic"] = "not busy and long stay"
                 elif restaurant["length_of_stay"] != "long":
                     break
@@ -557,10 +567,15 @@ class DialogManager:
                     break
 
             elif not requirements["romantic"]:
-
-                if restaurant["crowdedness"] != "busy" and restaurant["length_of_stay"] == "long":
+                if (
+                    restaurant["crowdedness"] != "busy"
+                    and restaurant["length_of_stay"] == "long"
+                ):
                     break
-                elif restaurant["crowdedness"] == "busy" and restaurant["length_of_stay"] != "long":
+                elif (
+                    restaurant["crowdedness"] == "busy"
+                    and restaurant["length_of_stay"] != "long"
+                ):
                     reasons["not romantic"] = "busy and short stay"
                 elif restaurant["crowdedness"] == "busy":
                     reasons["not romantic"] = "busy"
@@ -568,7 +583,9 @@ class DialogManager:
                     reasons["not romantic"] = "short to medium stay"
 
             chosen_restaurants.append(restaurant)
-            reasons["restaurantname"] = restaurant["restaurantname"]  # mark reasons for specific restaurant
+            reasons["restaurantname"] = restaurant[
+                "restaurantname"
+            ]  # mark reasons for specific restaurant
             reasons_all.append(reasons)
 
         if len(chosen_restaurants) == 0:
@@ -578,11 +595,13 @@ class DialogManager:
         elif len(chosen_restaurants) > 1:
             restaurant_choice = chosen_restaurants.sample(n=1)
             restaurant_choice_name = restaurant_choice["restaurantname"].iloc[0]
-            other_options = chosen_restaurants[chosen_restaurants["restaurantname"] != restaurant_choice_name]
+            other_options = chosen_restaurants[
+                chosen_restaurants["restaurantname"] != restaurant_choice_name
+            ]
 
         return restaurant_choice, other_options, reasons_all
 
-      def __get_suggestion_string(self, restaurant):
+    def __get_suggestion_string(self, restaurant):
         """Function which returns a string with a restaurant suggestion
 
         Args:
