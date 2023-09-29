@@ -109,7 +109,6 @@ DROPOUT_RATE = 0.2
 
 def fit_mlp():
     # read the data
-    model_folder = "src\\intent_models\\ml_models\\saved_models"
     df = pd.read_csv("data/splits/train_dialog_acts_no_dupes.csv")
     training_data = pd.read_csv("data/splits/rf_training_data.csv", index_col=0)
 
@@ -141,7 +140,7 @@ def fit_mlp():
     vectorizer = CountVectorizer()
     vectorizer.fit_transform(df["text"])
 
-    with open(os.path.join(model_folder,"vectorizer.pkl"), "wb") as file:
+    with open(os.path.join("models/vectorizer.pkl"), "wb") as file:
         pickle.dump(vectorizer, file)
 
     model = FeedForwardNN(VECTOR_SIZE, OUTPUT_SIZE, HIDDEN_SIZE, DROPOUT_RATE).to(
@@ -152,7 +151,7 @@ def fit_mlp():
 
     # Save the model
     best_model = training_loop(model, criterion, optimizer)
-    torch.save(best_model.state_dict(), os.path.join(model_folder,"mlp_model.pt"))
+    torch.save(best_model.state_dict(), "models/mlp_model.pt")
 
 
 def predict_single_input_mlp(input):
@@ -162,17 +161,16 @@ def predict_single_input_mlp(input):
     labels.append("null")
 
     # load the vectorizer from data
-    model_folder = "src\\intent_models\\ml_models\\saved_models"
-    if(os.path.exists(model_folder) == False):
-        os.makedirs("src/intent_models/ml_models/saved_models")
+    if(os.path.exists("models/mlp_model.pt") == False):
         fit_mlp()
-    print(os.path.join(model_folder,"vectorizer.pkl"))
 
-    with open(os.path.join(model_folder,"vectorizer.pkl"),"rb") as file:
+
+    with open("models/vectorizer.pkl","rb") as file:
         vectorizer = pickle.load(file)
+        
     # Load the model
     model = FeedForwardNN(VECTOR_SIZE, OUTPUT_SIZE, HIDDEN_SIZE, DROPOUT_RATE)
-    model.load_state_dict(torch.load(os.path.join(model_folder, "mlp_model.pt")))
+    model.load_state_dict(torch.load("models/mlp_model.pt"))
     model.eval()
 
     # Add the input to the vectorized training data
@@ -180,7 +178,7 @@ def predict_single_input_mlp(input):
 
     # Predict the intent of the input
     y_pred = torch.argmax(model(input_data))
-    
+
     # Return the label of the intent
     return labels[y_pred.item()]
 
