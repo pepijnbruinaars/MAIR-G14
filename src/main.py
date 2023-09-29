@@ -1,38 +1,20 @@
 import argparse
-import os
 from dialog_manager import DialogManager, DialogConfig
+from helpers import check_models
 
 
 def main(args: argparse.Namespace):
-    allowed_models = [
-        # TODO: Uncomment when implemented
-        # "keyword",
-        "RandomForest",
-        # 'neural'
-    ]
+    # Check validity of model
+    check_models(args)
 
-    # Verify model
-    if args.model not in allowed_models:
-        print(f"Invalid model: {args.model}")
-        return
-
-    # Check models folder for first time use
-    if args.model == "RF":
-        with os.scandir("models") as folder:
-            # If folder contains optimized_random_forest.joblib, then we are good to go
-            if "optimized_random_forest.joblib" in [file.name for file in folder]:
-                pass
-            # Train model if not
-            else:
-                raise Exception(
-                    "Intent classification model not found. Please run the random_forest.py script to train the model."
-                )
-
-    dialog_config: DialogConfig = {"intent_model": args.model, "verbose": args.verbose}
-
+    # Create dialog manager
+    dialog_config: DialogConfig = vars(args)
     dialog_manager = DialogManager(dialog_config)
 
+    # Start dialog
     dialog_manager.start_dialog()
+
+    return
 
 
 if __name__ == "__main__":
@@ -40,13 +22,46 @@ if __name__ == "__main__":
     parser.add_argument(
         "-m",
         "--model",
-        help="Select the classification model to be used",
-        default="RandomForest",
+        help="Select the classification model to be used: RF (Random Forest), MLP (multilayer perceptron), Majority",
+        default="RF",
+        dest="intent_model",
     )
     parser.add_argument(
         "-v",
         "--verbose",
         help="Print out debug information",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
+        "--tts",
+        help="Play system messages as speech",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
+        "--caps",
+        help="Convert system output to all caps",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
+        "-l",
+        "--levenshtein",
+        help="Define the levenshtein distance",
+        type=int,
+        default=2,
+    )
+    parser.add_argument(
+        "-d",
+        "--delay",
+        help="Configure a delay before system response",
+        type=float,
+        default=0.5,
+    )
+    parser.add_argument(
+        "--speech",
+        help="Takes the user input in the form of speech instead of text",
         action="store_true",
         default=False,
     )
