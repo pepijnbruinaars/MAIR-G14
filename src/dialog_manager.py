@@ -187,14 +187,15 @@ class DialogManager:
         # Add message to history and display
         self.__add_message(None, response, "Bot")
         # Show response word for word to simulate typing
-        print("\r\N{robot face} Bot: ", end="")
         if not self.dialog_config["verbose"]:
+            print("\r\N{robot face} Bot: ", end="")
             [
                 (print(c, end="", flush=True), time.sleep(random.uniform(0.005, 0.08)))
                 for c in response
             ]
+            print()
         else:
-            print(response, end="")
+            print("\r\N{robot face} Bot: {}\n".format(response), end="")
 
         # Handle text to speech
         self.__handle_tts(response) if self.dialog_config["tts"] else None
@@ -247,7 +248,7 @@ class DialogManager:
     def __dialog_loop(self):
         while not self.done:
             # Get the user input on the same line as the prompt
-            print("\n\N{bust in silhouette} User: ", end="")
+            print("\N{bust in silhouette} User: ", end="")
             user_input = (
                 self.__handle_speech() if self.dialog_config["speech"] else input()
             )
