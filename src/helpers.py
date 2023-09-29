@@ -11,6 +11,25 @@ import pandas as pd
 import random
 
 
+def get_suggestion_prefixes():
+    return [
+        "I suggest you go to",
+        "I recommend",
+        "I would recommend",
+        "I would suggest",
+        "You could go to",
+        "You could try",
+        "You could visit",
+        "You might like",
+        "You might enjoy",
+        "You might want to try",
+        "You might want to visit",
+        "You might want to go to",
+        "You might want to check out",
+        "You might want to go to",
+    ]
+
+
 def get_message_templates():
     return {
         # Intent messages
@@ -187,11 +206,12 @@ def check_models(args: argparse.Namespace):
                 return
             case _:
                 raise ValueError(f"Invalid model: {args.intent_model}")
-            
+
+
 def add_properties():
     # get restaurant data
     information = pd.read_csv("data/restaurant_info.csv")
-    
+
     # initialize lists
     food_quality = []
     crowdedness = []
@@ -202,9 +222,8 @@ def add_properties():
     # these values are fairly basic to make the inference easier.
     values = ["high", "low", "medium"]
 
-
     # create appropriatly sized new collumns
-    for i in range(len(information['addr'])):
+    for i in range(len(information["addr"])):
         food_quality.append(random.choice(values))
         crowdedness.append(random.choice(values))
         length_of_stay.append(random.choice(values))
@@ -215,5 +234,3 @@ def add_properties():
 
     # write to new csv file
     information.to_csv("data/restaurant_info_extra.csv")
-
-

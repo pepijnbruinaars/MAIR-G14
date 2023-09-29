@@ -1,6 +1,7 @@
 import os
 from helpers import (
     get_message_templates,
+    get_suggestion_prefixes,
     prep_user_input,
     de_emojify,
     print_verbose,
@@ -91,6 +92,7 @@ class DialogManager:
         self.food_options = information["food"].unique().tolist()
         self.price_options = information["pricerange"].unique().tolist()
         self.area_options = ["west", "north", "south", "centre", "east"]
+        self.additional_query = False
 
     def __repr__(self):
         return f"DialogManager({self.dialog_config})"
@@ -127,11 +129,7 @@ class DialogManager:
             case IntentType.BYE:
                 self.__handle_exit()
             case IntentType.INFORM:
-                if not self.additional_query:
-                    self.__respond("Do you have any additional requirements?")
-                    self.additional_query = True
-                else:
-                    self.__handle_inform(prepped_user_input)
+                self.__handle_inform(prepped_user_input)
             case IntentType.HELLO:
                 self.__respond(self.message_templates["hello"])
             case IntentType.THANKYOU:
@@ -170,25 +168,18 @@ class DialogManager:
                     "Your preferences have been reset! What can I do for you?"
                 )
             case IntentType.REQALTS:
-                # We can only handle requests if we have a restaurant, and other options
-                if (
-                    self.stored_restaurant is not None
-                    and self.stored_restaurant_options is not None
-                ):
-                    self.__respond("Here are some other options:")
-                    self.__show_matches(self.stored_restaurant_options)
-                else:
-                    self.__respond(self.message_templates["err_req"])
+                self.__handle_reqalts(prepped_user_input)
             case IntentType.CONFIRM:
                 # TODO: This is just placeholder
                 self.__respond("Great!")
-                self.additional_query = False
             case _:  # Default case
                 self.__respond("I'm sorry, I don't understand.")
 
     def __respond(self, response: str):
         # Handle delay
-        self.__handle_delay() if self.dialog_config["delay"] > 0.0 else None
+        self.__handle_delay() if self.dialog_config[
+            "delay"
+        ] > 0.0 and not self.dialog_config["verbose"] else None
 
         # Handle caps
         response = response.upper() if self.dialog_config["caps"] else response
@@ -197,10 +188,13 @@ class DialogManager:
         self.__add_message(None, response, "Bot")
         # Show response word for word to simulate typing
         print("\r\N{robot face} Bot: ", end="")
-        [
-            (print(c, end="", flush=True), time.sleep(random.uniform(0.005, 0.08)))
-            for c in response
-        ]
+        if not self.dialog_config["verbose"]:
+            [
+                (print(c, end="", flush=True), time.sleep(random.uniform(0.005, 0.08)))
+                for c in response
+            ]
+        else:
+            print(response, end="")
 
         # Handle text to speech
         self.__handle_tts(response) if self.dialog_config["tts"] else None
@@ -238,30 +232,6 @@ class DialogManager:
             print(f"\N{robot face} Bot: {'.' * counter}", end="\r")
             counter += 1
             time.sleep(0.1)
-
-    def __handle_speech(self):
-        recognizer = sr.Recognizer()
-
-        # Capture audio from the microphone
-        with sr.Microphone() as source:
-            audio = recognizer.listen(
-                source, timeout=None, phrase_time_limit=5
-            )  # Adjust the timeout as needed
-        try:
-            # Recognize the audio using Google Web Speech API
-            user_input = recognizer.recognize_google(audio)
-            # Write user input letter for letter
-            [(print(c, end="", flush=True), time.sleep(0.02)) for c in user_input]
-            print()
-
-            return user_input
-
-        except sr.UnknownValueError:
-            self.__respond("Sorry, I couldn't understand what you said.")
-            print("\r\N{bust in silhouette} User: ", end="")
-            return self.__handle_speech()
-        except sr.RequestError as e:
-            print_verbose(f"Sorry, an error occurred: {e}")
 
     # -------------- Public methods --------------
     def start_dialog(self):
@@ -330,11 +300,23 @@ class DialogManager:
             and other_options is not None
             and all(self.stored_preferences.values())
         ):
+            self.__prompt_other_preferences()
+            if not self.additional_query:
+                self.__respond(self.__get_suggestion_string(restaurant))
+                return True
+
+            # TODO: Handle additional preferences
             self.__respond(self.__get_suggestion_string(restaurant))
             return True
 
-        # Prompt user for other preferences
-        self.__prompt_other_preferences()
+        # If more than 1 option left, and not all preferences are filled, ask for more preferences
+        if (
+            restaurant is not None
+            and other_options is not None
+            and not all(self.stored_preferences.values())
+        ):
+            self.__prompt_other_preferences()
+            return True
         return False
 
     def __handle_request(self, prepped_user_input, restaurant) -> bool:
@@ -402,6 +384,45 @@ class DialogManager:
         else:
             self.__respond(self.message_templates["err_neg_next_step"])
 
+    def __handle_reqalts(self, prepped_user_input):
+        self.__extract_preference(prepped_user_input)
+        previous_suggestion = self.stored_restaurant
+
+        # Update restaurant information
+        restaurant, other_options = self.__retrieve_restaurant(self.stored_preferences)
+
+        # If no options left, and no restaurant found, then we can't help the user
+        if restaurant is None and other_options is None:
+            self.__respond(self.message_templates["err_inf_no_result"])
+            return False
+
+        # If 1 option left, suggest it
+        if (
+            restaurant is not None
+            and restaurant["restaurantname"] != previous_suggestion["restaurantname"]
+            and other_options is None
+        ):
+            self.__respond(self.__get_suggestion_string(restaurant))
+            return True
+
+        # If more than 1 option left, and all preferences are filled, suggest one
+        if (
+            restaurant is not None
+            and other_options is not None
+            and all(self.stored_preferences.values())
+        ):
+            self.__prompt_other_preferences()
+            if restaurant != previous_suggestion:
+                self.__respond(self.__get_suggestion_string(restaurant))
+                return True
+
+            self.__respond("There are no other options that match your preferences.")
+            self.__respond(self.__get_suggestion_string(restaurant))
+
+            return True
+
+        return False
+
     # -------------- Speech methods --------------
     def __handle_tts(self, response: str):
         # Convert text to speech
@@ -420,6 +441,30 @@ class DialogManager:
         # Wait for audio to finish
         while pygame.mixer.music.get_busy():
             pygame.time.wait(100)  # ms
+
+    def __handle_speech(self):
+        recognizer = sr.Recognizer()
+
+        # Capture audio from the microphone
+        with sr.Microphone() as source:
+            audio = recognizer.listen(
+                source, timeout=None, phrase_time_limit=5
+            )  # Adjust the timeout as needed
+        try:
+            # Recognize the audio using Google Web Speech API
+            user_input = recognizer.recognize_google(audio)
+            # Write user input letter for letter
+            [(print(c, end="", flush=True), time.sleep(0.02)) for c in user_input]
+            print()
+
+            return user_input
+
+        except sr.UnknownValueError:
+            self.__respond("Sorry, I couldn't understand what you said.")
+            print("\r\N{bust in silhouette} User: ", end="")
+            return self.__handle_speech()
+        except sr.RequestError as e:
+            print_verbose(f"Sorry, an error occurred: {e}")
 
     # -------------- Preference and lookup methods --------------
     def __extract_preference(self, input_string: str) -> None:
@@ -605,9 +650,7 @@ class DialogManager:
                 else:
                     break
 
-            elif not requirements[
-                "assigned_seats"
-            ]:  # do people ever prefer assigned seating?
+            elif not requirements["assigned_seats"]:
                 if restaurant["crowdedness"] == "busy":
                     break  # if you don't want assigned seats, busy restaurant will not work
                 else:
@@ -706,11 +749,12 @@ class DialogManager:
         Args:
             restaurant (_type_): The retrieved restaurant
         """
+        suggestion_prefixes = get_suggestion_prefixes()
         if restaurant is not None:
             # Remove new lines from the returned string
             return dedent(
                 f"""\
-                I suggest you go to {restaurant['restaurantname']}.
+                {suggestion_prefixes[random.randint(0, len(suggestion_prefixes) - 1)]} {restaurant['restaurantname']}.
                 It's {self.__get_word_prefix(restaurant['pricerange'])}
                 {'moderately priced' if restaurant['pricerange'] == 'moderate' else restaurant['pricerange']}
                 restaurant and serves {restaurant['food']} food. It is located in the {restaurant['area']} of town."""
