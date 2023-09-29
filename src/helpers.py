@@ -183,7 +183,4 @@ def add_properties():
     # write to new csv file
     information.to_csv("data/restaurant_info_extra.csv")
 
-if __name__ == "__main__":
-    # if file is run, create the new restaurant file. 
-    add_properties()
 
