@@ -1,5 +1,6 @@
 import os
 from helpers import (
+    capitalize_first_letter,
     get_message_templates,
     get_suggestion_prefixes,
     prep_user_input,
@@ -58,6 +59,7 @@ class DialogConfig(TypedDict):
     levenshtein: int  # Integer defining the desired levenshtein distance
     delay: float  # Optional delay before the system responds
     speech: bool  # Whether to take user input as speech or not
+    typing_speed: float  # Optional typing speed multiplier for the system
 
 
 class Message(TypedDict):
@@ -127,12 +129,15 @@ class DialogManager:
                 # TODO: This is just placeholder
                 self.__respond("Great!")
             case IntentType.BYE:
+                # Exit dialog system
                 self.__handle_exit()
             case IntentType.INFORM:
                 self.__handle_inform(prepped_user_input)
             case IntentType.HELLO:
+                # Generic hello message
                 self.__respond(self.message_templates["hello"])
             case IntentType.THANKYOU:
+                # Generic thank you message
                 self.__respond(self.message_templates["thankyou"])
             case IntentType.NEGATE, IntentType.DENY:
                 self.__handle_negate()
@@ -143,7 +148,7 @@ class DialogManager:
                 else:
                     self.__respond(self.message_templates["err_req"])
             case IntentType.REQMORE:
-                # We can only handle requests if we have a restaurant, and other options
+                # We can only handle requests if we have a restaurant and other options
                 if (
                     self.stored_restaurant is not None
                     and self.stored_restaurant_options is not None
@@ -157,6 +162,7 @@ class DialogManager:
                 last_message = self.message_history[-2]
                 self.__respond(last_message["text"])
             case IntentType.RESTART:
+                # Reset preferences and stored restaurant information
                 self.stored_restaurant = None
                 self.stored_restaurant_options = None
                 self.stored_preferences = {
@@ -171,9 +177,9 @@ class DialogManager:
                 self.__handle_reqalts(prepped_user_input)
             case IntentType.CONFIRM:
                 # TODO: This is just placeholder
-                self.__respond("Great!")
+                self.__respond("Great! \N{grinning face with smiling eyes}")
             case _:  # Default case
-                self.__respond("I'm sorry, I don't understand.")
+                self.__respond("I'm sorry \N{pensive face}, I don't understand.")
 
     def __respond(self, response: str):
         # Handle delay
@@ -190,7 +196,14 @@ class DialogManager:
         if not self.dialog_config["verbose"]:
             print("\r\N{robot face} Bot: ", end="")
             [
-                (print(c, end="", flush=True), time.sleep(random.uniform(0.005, 0.08)))
+                (
+                    print(c, end="", flush=True),
+                    time.sleep(
+                        1
+                        / self.dialog_config["typing_speed"]
+                        * random.uniform(0.005, 0.08)
+                    ),
+                )
                 for c in response
             ]
             print()
@@ -242,6 +255,7 @@ class DialogManager:
         try:
             self.__dialog_loop()
         except KeyboardInterrupt:
+            print()
             self.__handle_exit()
 
     # -------------- Internal methods --------------
@@ -755,10 +769,12 @@ class DialogManager:
             # Remove new lines from the returned string
             return dedent(
                 f"""\
-                {suggestion_prefixes[random.randint(0, len(suggestion_prefixes) - 1)]} {restaurant['restaurantname']}.
+                {suggestion_prefixes[random.randint(0, len(suggestion_prefixes) - 1)]}
+                 {capitalize_first_letter(restaurant['restaurantname'])}.
                 It's {self.__get_word_prefix(restaurant['pricerange'])}
                 {'moderately priced' if restaurant['pricerange'] == 'moderate' else restaurant['pricerange']}
-                restaurant and serves {restaurant['food']} food. It is located in the {restaurant['area']} of town."""
+                restaurant and serves {capitalize_first_letter(restaurant['food'])} food.
+                 It is located in the {restaurant['area']} of town."""
             ).replace("\n", " ")
         return "I'm sorry, I don't know any restaurants that match your preferences."
 

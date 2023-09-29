@@ -37,18 +37,18 @@ def get_message_templates():
             """Hello, I am a restaurant recommender chatbot \N{rocket}.
             \r\tTo exit, just type 'exit'!
             \r\tI can find you a restaurant using the following preferences:
-            - food
-            - area
-            - price range"""
+            - food \N{fork and knife}
+            - area \N{house building}
+            - price range \N{money bag}"""
         ),
         "hello": "\N{waving hand sign} Hi! How can I help you?",
         "thankyou": "You're welcome! \N{grinning face with smiling eyes}",
         # Error messages
         "err_req": (
-            "I'm sorry, I can't answer your question because I don't know"
+            "I'm sorry \N{pensive face}, I can't answer your question because I don't know"
             " any restaurants that match your preferences."
         ),
-        "err_inf_no_result": "I'm sorry, I can't find any restaurants that match your preferences.",
+        "err_inf_no_result": "I'm sorry \N{pensive face}, I can't find any restaurants that match your preferences.",
         "err_neg_next_step": "I'm sorry \N{pensive face}, I can't help you with that.",
         "err_neg_no_options": "I'm sorry \N{pensive face}, there are no other options that match your preferences.",
     }
@@ -234,3 +234,7 @@ def add_properties():
 
     # write to new csv file
     information.to_csv("data/restaurant_info_extra.csv")
+
+
+def capitalize_first_letter(string):
+    return string[0].upper() + string[1:]

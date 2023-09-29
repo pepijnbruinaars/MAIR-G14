@@ -65,5 +65,11 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
     )
+    parser.add_argument(
+        "--typing-speed",
+        help="Configure the typing speed multiplier of the system. Larger number means faster typing.",
+        type=float,
+        default=2,
+    )
     args = parser.parse_args()
     main(args)
