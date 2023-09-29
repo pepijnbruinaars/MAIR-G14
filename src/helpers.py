@@ -7,6 +7,8 @@ import nltk
 import csv
 import os
 import re
+import pandas as pd
+import random
 
 
 def load_csv_data(filepath):
@@ -152,3 +154,33 @@ def check_models(args: argparse.Namespace):
                 return
             case _:
                 raise ValueError(f"Invalid model: {args.intent_model}")
+            
+def add_properties():
+    # get restaurant data
+    information = pd.read_csv("data/restaurant_info.csv")
+    
+    # initialize lists
+    food_quality = []
+    crowdedness = []
+    length_of_stay = []
+
+    # for now these are the only values to choose from for all 3 new collumns.
+    # Since these are for the inference model to use and not  for the user
+    # these values are fairly basic to make the inference easier.
+    values = ["high", "low", "medium"]
+
+
+    # create appropriatly sized new collumns
+    for i in range(len(information['addr'])):
+        food_quality.append(random.choice(values))
+        crowdedness.append(random.choice(values))
+        length_of_stay.append(random.choice(values))
+
+    information["food_quality"] = food_quality
+    information["crowdedness"] = crowdedness
+    information["length_of_stay"] = length_of_stay
+
+    # write to new csv file
+    information.to_csv("data/restaurant_info_extra.csv")
+
+
