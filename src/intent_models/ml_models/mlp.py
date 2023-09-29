@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 import torch
 import pickle
+import os.path
 
 # read the data
 df = pd.read_csv("data/splits/train_dialog_acts_no_dupes.csv")
@@ -138,7 +139,8 @@ def fit_mlp():
     # Save the vectorizer
     vectorizer = CountVectorizer()
     vectorizer.fit_transform(df["text"])
-    with open("models/vectorizer.pkl", "wb") as file:
+
+    with open(os.path.join("models/vectorizer.pkl"), "wb") as file:
         pickle.dump(vectorizer, file)
 
     model = FeedForwardNN(VECTOR_SIZE, OUTPUT_SIZE, HIDDEN_SIZE, DROPOUT_RATE).to(
@@ -153,17 +155,19 @@ def fit_mlp():
 
 
 def predict_single_input_mlp(input):
+
     df = pd.read_csv("data/no_duplicates_dialog_acts.csv")
-    labels = pd.factorize(df["label"])[1]
+    labels = pd.factorize(df["label"])[1].tolist()
+    labels.append("null")
 
     # load the vectorizer from data
-    try:
-        with open("models/vectorizer.pkl", "rb") as file:
-            vectorizer = pickle.load(file)
-    except FileNotFoundError:
-        # If the vectorizer is not found, train a new model
+    if(os.path.exists("models/mlp_model.pt") == False):
         fit_mlp()
 
+
+    with open("models/vectorizer.pkl","rb") as file:
+        vectorizer = pickle.load(file)
+        
     # Load the model
     model = FeedForwardNN(VECTOR_SIZE, OUTPUT_SIZE, HIDDEN_SIZE, DROPOUT_RATE)
     model.load_state_dict(torch.load("models/mlp_model.pt"))
@@ -179,4 +183,4 @@ def predict_single_input_mlp(input):
     return labels[y_pred.item()]
 
 
-# print(predict_single_input_mlp("Hello"))
+#print(predict_single_input_mlp("repeat"))

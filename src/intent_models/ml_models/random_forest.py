@@ -8,6 +8,7 @@ import joblib
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.feature_extraction.text import CountVectorizer
 import pandas as pd
+import pickle
 
 # import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -46,6 +47,7 @@ def process_data(df):
     df_copy = df.copy()
     # categorize the label data as numerical data, (null = -1), using pd.factorize
     df_copy["label"] = pd.factorize(df_copy["label"])[0]
+    
 
     # Use the Sklearn method of countVectorizer to make a matrix of word counts
     # this method also tokenizes implicitly
@@ -60,6 +62,9 @@ def process_data(df):
     # colomns
     features = vectorizer.get_feature_names_out()
     training_data = pd.DataFrame(data=bag_of_words, columns=features)
+
+    with open("models/RFvectorizer.pkl", "wb") as file:
+        pickle.dump(vectorizer, file)
 
     # Save training data to csv
     training_data.to_csv("data/splits/rf_training_data.csv")
@@ -87,11 +92,22 @@ def predict_single_input_rf(input):
     Args:
         input (__str__): The input string to predict the intent of.
     """
-    # Get the training data
-    labels = pd.factorize(train_data_no_dupes["label"])[1]
 
-    # load the vectorizer from data
-    _, _, _, _, vectorizer = process_data(train_data_no_dupes)
+    # Get the training data
+    labels = pd.factorize(train_data_no_dupes["label"])[1].tolist()
+    labels.append("null")
+    
+    # load the vectorizer from training data processing
+    try:
+        with open("models/RFvectorizer.pkl", "rb") as file:
+            vectorizer = pickle.load(file)
+    except FileNotFoundError:
+        # If the vectorizer is not found, train a new model
+        _, _, _, _, vectorizer = process_data(train_data_no_dupes)
+
+    
+    
+
 
     # Load the model
     model = joblib.load("models/optimized_random_forest.joblib")
@@ -230,7 +246,7 @@ def test_accuracy(DATA, FOREST=False, OPTIMIZED_FOREST=False):
         chosen_model = "RandomForestClassifier"
     elif OPTIMIZED_FOREST:
         # Random forest model with optimized parameters, boolean for finding new parameters.
-        model = generate_random_forest(DATA)
+        model = optimize_hyperparameters(x_train, y_train)
         chosen_model = "OptimizedRandomForestClassifier"
     else:
         print("No valid model selected")
