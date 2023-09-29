@@ -59,8 +59,8 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 # the final training loop
-def training_loop(model, criterion, optimizer):
-    epochs = 200
+def training_loop(model, criterion, optimizer, verbose=True):
+    epochs = 300
     for epoch in range(epochs):
         model.train()
         optimizer.zero_grad()
@@ -87,7 +87,7 @@ def training_loop(model, criterion, optimizer):
                 best_model = model
                 highest_accuracy = test_accuracy
 
-        if epoch % 10 == 0:
+        if verbose and epoch % 10 == 0:
             print(
                 f""" Accuracy: {train_accuracy:.4f}| Test Accuracy: {test_accuracy:.4f} |
                 epoch {epoch}"""
@@ -150,24 +150,22 @@ def fit_mlp():
     criterion = torch.nn.CrossEntropyLoss()
 
     # Save the model
-    best_model = training_loop(model, criterion, optimizer)
+    best_model = training_loop(model, criterion, optimizer, verbose=False)
     torch.save(best_model.state_dict(), "models/mlp_model.pt")
 
 
 def predict_single_input_mlp(input):
-
     df = pd.read_csv("data/no_duplicates_dialog_acts.csv")
     labels = pd.factorize(df["label"])[1].tolist()
     labels.append("null")
 
     # load the vectorizer from data
-    if(os.path.exists("models/mlp_model.pt") == False):
+    if os.path.exists("models/mlp_model.pt") is False:
         fit_mlp()
 
-
-    with open("models/vectorizer.pkl","rb") as file:
+    with open("models/vectorizer.pkl", "rb") as file:
         vectorizer = pickle.load(file)
-        
+
     # Load the model
     model = FeedForwardNN(VECTOR_SIZE, OUTPUT_SIZE, HIDDEN_SIZE, DROPOUT_RATE)
     model.load_state_dict(torch.load("models/mlp_model.pt"))
@@ -183,4 +181,4 @@ def predict_single_input_mlp(input):
     return labels[y_pred.item()]
 
 
-#print(predict_single_input_mlp("repeat"))
+# print(predict_single_input_mlp("repeat"))
