@@ -47,6 +47,7 @@ def process_data(df):
     df_copy = df.copy()
     # categorize the label data as numerical data, (null = -1), using pd.factorize
     df_copy["label"] = pd.factorize(df_copy["label"])[0]
+    
 
     # Use the Sklearn method of countVectorizer to make a matrix of word counts
     # this method also tokenizes implicitly
@@ -91,16 +92,22 @@ def predict_single_input_rf(input):
     Args:
         input (__str__): The input string to predict the intent of.
     """
-    # Get the labels from the training data
-    labels = pd.factorize(train_data_no_dupes["label"])[1]
 
+    # Get the training data
+    labels = pd.factorize(train_data_no_dupes["label"])[1].tolist()
+    labels.append("null")
+    
     # load the vectorizer from training data processing
     try:
         with open("models/RFvectorizer.pkl", "rb") as file:
             vectorizer = pickle.load(file)
     except FileNotFoundError:
         # If the vectorizer is not found, train a new model
-        process_data(train_data_no_dupes)
+        _, _, _, _, vectorizer = process_data(train_data_no_dupes)
+
+    
+    
+
 
     # Load the model
     model = joblib.load("models/optimized_random_forest.joblib")
