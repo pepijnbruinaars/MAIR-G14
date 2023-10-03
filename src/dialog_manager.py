@@ -123,15 +123,16 @@ class DialogManager:
         # Handle user intent
         match intent:
             case IntentType.ACK:
-                # TODO: This is just placeholder
-                self.__respond("You're welcome!")
+                # Handle acknowledgement, which isn't very informative
+                self.__respond("Okay!")
             case IntentType.AFFIRM:
-                # TODO: This is just placeholder
+                # Handle affirmation, which isn't very informative either
                 self.__respond("Great!")
             case IntentType.BYE:
                 # Exit dialog system
                 self.__handle_exit()
             case IntentType.INFORM:
+                # Handle inform
                 self.__handle_inform(prepped_user_input)
             case IntentType.HELLO:
                 # Generic hello message
@@ -140,6 +141,7 @@ class DialogManager:
                 # Generic thank you message
                 self.__respond(self.message_templates["thankyou"])
             case IntentType.NEGATE, IntentType.DENY:
+                # Handle deny and negation in the same way
                 self.__handle_negate()
             case IntentType.REQUEST:
                 # We can only handle requests if we have a restaurant
@@ -159,8 +161,17 @@ class DialogManager:
                     self.__respond(self.message_templates["err_req"])
             case IntentType.REPEAT:
                 # Just respond the latest message sent by the bot again
-                last_message = self.message_history[-2]
-                self.__respond(last_message["text"])
+                # Find the last message with sender bot
+                last_bot_message = None
+                for message in reversed(self.message_history):
+                    if message["sender"] == "Bot":
+                        last_bot_message = message
+                        break
+                # If we found a message, repeat it
+                if last_bot_message is not None:
+                    self.__respond(last_bot_message["text"])
+                else:
+                    self.__respond("I'm sorry, I don't have anything to repeat.")
             case IntentType.RESTART:
                 # Reset preferences and stored restaurant information
                 self.stored_restaurant = None
@@ -174,11 +185,12 @@ class DialogManager:
                     "Your preferences have been reset! What can I do for you?"
                 )
             case IntentType.REQALTS:
+                # Handle request for alternatives
                 self.__handle_reqalts(prepped_user_input)
             case IntentType.CONFIRM:
                 # TODO: This is just placeholder
                 self.__respond("Great! \N{grinning face with smiling eyes}")
-            case _:  # Default case
+            case _:  # Default (null) case
                 self.__respond("I'm sorry \N{pensive face}, I don't understand.")
 
     def __respond(self, response: str):
@@ -438,6 +450,45 @@ class DialogManager:
 
         return False
 
+    def __handle_confirm(self, prepped_user_input):
+        preferences = self.__extract_preference(prepped_user_input, False)
+        chosen_restaurant = self.stored_restaurant
+
+        # If no preferences are given, return None
+        if (
+            preferences["food"] is None
+            and preferences["area"] is None
+            and preferences["pricerange"] is None
+        ) or chosen_restaurant is None:
+            self.__respond(
+                "I haven't found a restaurant yet so I can't help you with that..."
+            )
+
+            return False
+
+        # Check if preferences are satisfied
+        food_match = preferences["food"] == chosen_restaurant["food"]
+        area_match = preferences["area"] == chosen_restaurant["area"]
+        price_match = preferences["pricerange"] == chosen_restaurant["pricerange"]
+
+        # If all preferences are satisfied, confirm
+        if food_match and area_match and price_match:
+            self.__respond("Yes, that's correct!")
+            return True
+        if not food_match:
+            self.__respond(
+                f"Nope, the food is {capitalize_first_letter(chosen_restaurant['food'])}."
+            )
+        if not area_match:
+            self.__respond(f"Nope, the area is {chosen_restaurant['area']}.")
+
+        if not price_match:
+            self.__respond(
+                f"Nope, the price range is {chosen_restaurant['pricerange']}."
+            )
+
+        return False
+
     # -------------- Speech methods --------------
     def __handle_tts(self, response: str):
         # Convert text to speech
@@ -482,7 +533,10 @@ class DialogManager:
             print_verbose(f"Sorry, an error occurred: {e}")
 
     # -------------- Preference and lookup methods --------------
-    def __extract_preference(self, input_string: str) -> None:
+    def __extract_preference(
+        self, input_string: str, updatePreference: bool = True
+    ) -> dict:
+        preferences = {}
         # make sure input is in lower case
         input_string = input_string.lower()
 
@@ -500,16 +554,19 @@ class DialogManager:
         # Look for exact matches
         found_something = False
         if food_match:
-            self.stored_preferences["food"] = food_match.group()
+            preferences["food"] = food_match.group()
             found_something = True
 
         if area_match:
-            self.stored_preferences["area"] = area_match.group()
+            preferences["area"] = area_match.group()
             found_something = True
 
         if price_match:
-            self.stored_preferences["pricerange"] = price_match.group()
+            preferences["pricerange"] = price_match.group()
             found_something = True
+
+        if updatePreference:
+            self.stored_preferences.update(preferences)
 
         if not found_something:
             print_verbose(self.dialog_config["verbose"], "No exact matches found.")
@@ -540,7 +597,7 @@ class DialogManager:
             f"extracted price preference: {self.stored_preferences['pricerange']}",
         )
 
-        return
+        return preferences
 
     def __retrieve_restaurant(self, preferences):
         """Function which retrieves a restaurant based on the user's preferences
