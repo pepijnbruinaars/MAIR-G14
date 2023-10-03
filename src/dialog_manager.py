@@ -189,7 +189,7 @@ class DialogManager:
                 self.__handle_reqalts(prepped_user_input)
             case IntentType.CONFIRM:
                 # TODO: This is just placeholder
-                self.__respond("Great! \N{grinning face with smiling eyes}")
+                self.__handle_confirm(prepped_user_input)
             case _:  # Default (null) case
                 self.__respond("I'm sorry \N{pensive face}, I don't understand.")
 
@@ -707,7 +707,8 @@ class DialogManager:
                 if restaurant["food"] == "romanian":
                     break
 
-            elif not requirements["touristic"]:
+            # Check if preference is explicitly stated
+            elif requirements["touristic"] is False:
                 if restaurant["food"] == "romanian":
                     reasons["not touristic"] = "romanian"  # add this to reasoning
                 elif (
@@ -722,7 +723,7 @@ class DialogManager:
                 else:
                     break
 
-            elif not requirements["assigned_seats"]:
+            elif requirements["assigned_seats"] is False:
                 if restaurant["crowdedness"] == "busy":
                     break  # if you don't want assigned seats, busy restaurant will not work
                 else:
@@ -734,7 +735,7 @@ class DialogManager:
                 else:
                     reasons["children"] = "short stay"
 
-            elif not requirements["children"]:
+            elif requirements["children"] is False:
                 if restaurant["length_of_stay"] == "long":
                     reasons["no children"] = "long stay"
                 else:
@@ -751,7 +752,7 @@ class DialogManager:
                 elif restaurant["crowdedness"] == "busy":
                     break
 
-            elif not requirements["romantic"]:
+            elif requirements["romantic"] is False:
                 if (
                     restaurant["crowdedness"] != "busy"
                     and restaurant["length_of_stay"] == "long"
@@ -876,6 +877,6 @@ class DialogManager:
         """Function which a or an based on the first letter of a word
 
         Args:
-            word (_type_): The word to get the prefix of
+            word (str): The word to get the prefix of
         """
         return "an" if word[0] in ["a", "e", "i", "o", "u"] else "a"

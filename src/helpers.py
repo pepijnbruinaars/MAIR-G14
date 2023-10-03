@@ -220,13 +220,15 @@ def add_properties():
     # for now these are the only values to choose from for all 3 new collumns.
     # Since these are for the inference model to use and not  for the user
     # these values are fairly basic to make the inference easier.
-    values = ["high", "low", "medium"]
+    food_quality_values = ["good", "bad"]
+    crowdedness_values = ["busy", "calm"]
+    length_of_stay_values = ["long", "short"]
 
     # create appropriatly sized new collumns
     for i in range(len(information["addr"])):
-        food_quality.append(random.choice(values))
-        crowdedness.append(random.choice(values))
-        length_of_stay.append(random.choice(values))
+        food_quality.append(random.choice(food_quality_values))
+        crowdedness.append(random.choice(crowdedness_values))
+        length_of_stay.append(random.choice(length_of_stay_values))
 
     information["food_quality"] = food_quality
     information["crowdedness"] = crowdedness
