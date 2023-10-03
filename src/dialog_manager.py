@@ -28,7 +28,7 @@ import pygame  # noqa
 import time  # noqa
 import re  # noqa
 
-information = pd.read_csv("data/restaurant_info.csv")
+information = pd.read_csv("data/restaurant_info_extra.csv")
 
 
 # Enum for all intent types
@@ -95,6 +95,7 @@ class DialogManager:
         self.price_options = information["pricerange"].unique().tolist()
         self.area_options = ["west", "north", "south", "centre", "east"]
         self.additional_query = False
+        self.has_given_recommendation = False
 
     def __repr__(self):
         return f"DialogManager({self.dialog_config})"
@@ -188,7 +189,7 @@ class DialogManager:
                 # Handle request for alternatives
                 self.__handle_reqalts(prepped_user_input)
             case IntentType.CONFIRM:
-                # TODO: This is just placeholder
+                # Handle a confirmation request
                 self.__handle_confirm(prepped_user_input)
             case _:  # Default (null) case
                 self.__respond("I'm sorry \N{pensive face}, I don't understand.")
@@ -316,25 +317,74 @@ class DialogManager:
             self.__respond(self.message_templates["err_inf_no_result"])
             return False
 
-        # If 1 option left, suggest it
+        # If 1 option left, suggest it, we also cannot ask the user for additional preferences
         if restaurant is not None and other_options is None:
-            self.__respond(self.__get_suggestion_string(restaurant))
-            return True
+            if not self.has_given_recommendation:
+                self.__respond(self.__get_suggestion_string(restaurant))
+                self.__prompt_additional_preferences()
+                self.has_given_recommendation = True
+                return True
 
-        # If more than 1 option left, and all preferences are filled, suggest one
+            # Extract additional preferences
+            additional_preferences = self.__extract_additional_preferences(
+                prepped_user_input
+            )
+            if additional_preferences is None:
+                return True
+
+            # Filter out restaurants that don't match the additional preferences
+            if not self.stored_restaurant_options:
+                self.stored_restaurant_options = []
+            restaurants = [self.stored_restaurant] + self.stored_restaurant_options
+            restaurant, other_options, reasons = self.__additional_preferences(
+                restaurants, additional_preferences
+            )
+            print("Additional preferences")
+            if restaurant is not None:
+                reason = reasons["restaurantname" == restaurant["restaurantname"]]
+                self.__respond(self.__get_suggestion_string(restaurant))
+                self.__respond("That is because: {}".format(reason))
+                return True
+            self.__respond(self.message_templates["err_inf_no_result"])
+            return False
+        # If more than 1 option left, and all preferences are filled, suggest one and ask for additional preferences
         if (
             restaurant is not None
             and other_options is not None
             and all(self.stored_preferences.values())
         ):
-            self.__prompt_other_preferences()
-            if not self.additional_query:
+            self.__prompt_other_preferences()  # Prompt for other required preferences
+            if not self.additional_query and not self.has_given_recommendation:
                 self.__respond(self.__get_suggestion_string(restaurant))
+                self.__prompt_additional_preferences()
+                self.has_given_recommendation = True
                 return True
 
-            # TODO: Handle additional preferences
-            self.__respond(self.__get_suggestion_string(restaurant))
-            return True
+            # Extract additional preferences
+            additional_preferences = self.__extract_additional_preferences(
+                prepped_user_input
+            )
+            if additional_preferences is None:
+                return True
+
+            # Filter out restaurants that don't match the additional preferences
+            if not self.stored_restaurant_options:
+                self.stored_restaurant_options = []
+            restaurants = [self.stored_restaurant] + self.stored_restaurant_options
+            restaurant, other_options, reasons = self.__additional_preferences(
+                restaurants, additional_preferences
+            )
+            print("Additional preferences")
+            # Find reason where the restaurant name matches
+            if restaurant is not None:
+                reason = reasons["restaurantname" == restaurant["restaurantname"]]
+                self.__respond(self.__get_suggestion_string(restaurant))
+                self.__respond("That is because: {}".format(reason))
+                return True
+
+            # If no restaurant was found, then we can't help the user
+            self.__respond(self.message_templates["err_inf_no_result"])
+            return False
 
         # If more than 1 option left, and not all preferences are filled, ask for more preferences
         if (
@@ -537,8 +587,6 @@ class DialogManager:
         self, input_string: str, updatePreference: bool = True
     ) -> dict:
         preferences = {}
-        # make sure input is in lower case
-        input_string = input_string.lower()
 
         # for every entry add the option of to the regex
         food_regex = "|".join(self.food_options)
@@ -599,13 +647,81 @@ class DialogManager:
 
         return preferences
 
+    def __extract_additional_preferences(self, input_string: str) -> dict:
+        requirements = {
+            "touristic": None,
+            "assigned_seats": None,
+            "children": None,
+            "romantic": None,
+        }
+
+        # for every entry add the possible preferences to the regex
+        touristic_regex = "|".join(["touristic", "touristy", "tourism"])
+        not_touristic_regex = "|".join(["not touristic", "not touristy", "not tourism"])
+        assigned_seats_regex = "|".join(["assigned seats", "assigned seat"])
+        not_assigned_seats_regex = "|".join(["not assigned seats", "not assigned seat"])
+        children_regex = "|".join(["children", "child", "kids", "kid"])
+        not_children_regex = "|".join(
+            ["not children", "not child", "not kids", "no kids"]
+        )
+        romantic_regex = "|".join(["romantic", "romance", "romanticism"])
+        not_romantic_regex = "|".join(
+            ["not romantic", "not romance", "not romanticism"]
+        )
+
+        # match the possible preferences to the input
+        touristic_match = re.search(rf"{touristic_regex}", input_string)
+        not_touristic_match = re.search(rf"{not_touristic_regex}", input_string)
+        assigned_seats_match = re.search(rf"{assigned_seats_regex}", input_string)
+        not_assigned_seats_match = re.search(
+            rf"{not_assigned_seats_regex}", input_string
+        )
+        children_match = re.search(rf"{children_regex}", input_string)
+        not_children_match = re.search(rf"{not_children_regex}", input_string)
+        romantic_match = re.search(rf"{romantic_regex}", input_string)
+        not_romantic_match = re.search(rf"{not_romantic_regex}", input_string)
+
+        # We don't have to look for anything mistyped anymore
+        # Look for exact matches
+        found_something = False
+        if touristic_match:
+            requirements["touristic"] = True
+            found_something = True
+        if not_touristic_match:
+            requirements["touristic"] = False
+            found_something = True
+        if assigned_seats_match:
+            requirements["assigned_seats"] = True
+            found_something = True
+        if not_assigned_seats_match:
+            requirements["assigned_seats"] = False
+            found_something = True
+        if children_match:
+            requirements["children"] = True
+            found_something = True
+        if not_children_match:
+            requirements["children"] = False
+            found_something = True
+        if romantic_match:
+            requirements["romantic"] = True
+            found_something = True
+        if not_romantic_match:
+            requirements["romantic"] = False
+            found_something = True
+
+        if not found_something:
+            self.__respond("I'm sorry, I don't understand.")
+            return None
+
+        return requirements
+
     def __retrieve_restaurant(self, preferences):
         """Function which retrieves a restaurant based on the user's preferences
 
         Args:
             preferences (_type_): The retrieved preferences of the user
         """
-        data = pd.read_csv("data/original/restaurant_info.csv")
+        data = pd.read_csv("data/restaurant_info_extra.csv")
         pref_type = preferences["food"]
         pref_area = preferences["area"]
         pref_price = preferences["pricerange"]
@@ -697,13 +813,14 @@ class DialogManager:
             restaurant
         ) in candidate_restaurants:  # loop over preselected restaurant options
             reasons = {}  # reasons for specific restaurant
-
+            print(requirements)
             if requirements["touristic"]:
                 if (
                     restaurant["pricerange"] == "cheap"
                     and restaurant["food_quality"] == "good"
                 ):
                     reasons["touristic"] = "cheap and good food"
+                    print(reasons)
                 if restaurant["food"] == "romanian":
                     break
 
@@ -767,23 +884,25 @@ class DialogManager:
                     reasons["not romantic"] = "busy"
                 elif restaurant["length_of_stay"] != "long":
                     reasons["not romantic"] = "short to medium stay"
+                print(reasons)
+            chosen_restaurants = pd.concat(
+                [chosen_restaurants, pd.DataFrame([restaurant])]
+            )  # add restaurant to final list
 
-            chosen_restaurants.append(restaurant)
             reasons["restaurantname"] = restaurant[
                 "restaurantname"
             ]  # mark reasons for specific restaurant
             reasons_all.append(reasons)
-
         if len(chosen_restaurants) == 0:
-            raise LookupError("No restaurants with the specified requirements!")
+            return None, None, None
         elif len(chosen_restaurants) == 1:
-            restaurant_choice = chosen_restaurants
+            restaurant_choice = chosen_restaurants.iloc[0].to_dict()
         elif len(chosen_restaurants) > 1:
-            restaurant_choice = chosen_restaurants.sample(n=1)
-            restaurant_choice_name = restaurant_choice["restaurantname"].iloc[0]
+            restaurant_choice = chosen_restaurants.sample(n=1).iloc[0].to_dict()
+            restaurant_choice_name = restaurant_choice["restaurantname"]
             other_options = chosen_restaurants[
                 chosen_restaurants["restaurantname"] != restaurant_choice_name
-            ]
+            ].to_dict("records")
 
         return restaurant_choice, other_options, reasons_all
 
@@ -815,6 +934,16 @@ class DialogManager:
             self.__respond("What price range do you prefer?")
         elif self.stored_preferences["area"] is None:
             self.__respond("What area of town do you prefer?")
+
+    def __prompt_additional_preferences(self):
+        """Function which prompts the user for additional preferences"""
+        self.__respond(
+            "Do you have any additional preferences? I can help you find a restaurant that is:"
+            + "\n- (Not) touristic"
+            + "\n- Has (no) assigned seats"
+            + "\n- Is (not) child friendly"
+            + "\n- Is (not) romantic"
+        )
 
     def __get_suggestion_string(self, restaurant):
         """Function which returns a string with a restaurant suggestion

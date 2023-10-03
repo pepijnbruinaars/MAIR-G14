@@ -108,6 +108,7 @@ def prep_user_input(user_input: str):
                     or word == "no"
                     or word == "yes"
                     or word == "more"
+                    or word == "not"
                 )
             ]
         )
@@ -123,6 +124,7 @@ def prep_user_input(user_input: str):
                     or word == "no"
                     or word == "yes"
                     or word == "more"
+                    or word == "not"
                 )
             ]
         )

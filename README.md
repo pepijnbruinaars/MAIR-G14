@@ -15,7 +15,7 @@ The chatbot will follow the following state-transition diagram to retrieve your 
 
 ## Installing and running
 
-In general, the following instructions should work on any system.
+The following instructions should work on any system running Python version 3.10 and higher.
 
 1. Open the root directory of the project `MAIR-G14`.
 2. To install the required packages, run `pip install -r requirements.txt`.
