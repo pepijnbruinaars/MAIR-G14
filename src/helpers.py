@@ -11,6 +11,49 @@ import pandas as pd
 import random
 
 
+def get_suggestion_prefixes():
+    return [
+        "I suggest you go to",
+        "I recommend",
+        "I would recommend",
+        "I would suggest",
+        "You could go to",
+        "You could try",
+        "You could visit",
+        "You might like",
+        "You might enjoy",
+        "You might want to try",
+        "You might want to visit",
+        "You might want to go to",
+        "You might want to check out",
+        "You might want to go to",
+    ]
+
+
+def get_message_templates():
+    return {
+        # Intent messages
+        "welcome": (
+            """Hello, I am a restaurant recommender chatbot \N{rocket}.
+            \r\tTo exit, just type 'exit'!
+            \r\tI can find you a restaurant using the following preferences:
+            - food \N{fork and knife}
+            - area \N{house building}
+            - price range \N{money bag}"""
+        ),
+        "hello": "\N{waving hand sign} Hi! How can I help you?",
+        "thankyou": "You're welcome! \N{grinning face with smiling eyes}",
+        # Error messages
+        "err_req": (
+            "I'm sorry \N{pensive face}, I can't answer your question because I don't know"
+            " any restaurants that match your preferences."
+        ),
+        "err_inf_no_result": "I'm sorry \N{pensive face}, I can't find any restaurants that match your preferences.",
+        "err_neg_next_step": "I'm sorry \N{pensive face}, I can't help you with that.",
+        "err_neg_no_options": "I'm sorry \N{pensive face}, there are no other options that match your preferences.",
+    }
+
+
 def load_csv_data(filepath):
     data = {}
     with open(filepath, "r") as csv_file:
@@ -60,19 +103,19 @@ def prep_user_input(user_input: str):
             [
                 word
                 for word in user_input.split()
-                if word not in stopwords.words("english")
+                if (
+                    word not in stopwords.words("english")
+                    or word == "no"
+                    or word == "yes"
+                    or word == "more"
+                    or word == "not"
+                )
             ]
         )
     except LookupError:
         print("Stopwords have not yet been downloaded. Downloading now...")
         nltk.download("stopwords")
-        user_input = " ".join(
-            [
-                word
-                for word in user_input.split()
-                if word not in stopwords.words("english")
-            ]
-        )
+        prep_user_input(user_input)
 
     # Remove punctuation
     user_input = user_input.translate(str.maketrans("", "", string.punctuation))
@@ -97,8 +140,7 @@ def de_emojify(text):
 
 
 def print_verbose(verbose: bool, message: str):
-    if verbose:
-        print(message)
+    print(message) if verbose else None
 
 
 def check_models(args: argparse.Namespace):
@@ -154,11 +196,12 @@ def check_models(args: argparse.Namespace):
                 return
             case _:
                 raise ValueError(f"Invalid model: {args.intent_model}")
-            
+
+
 def add_properties():
     # get restaurant data
     information = pd.read_csv("data/restaurant_info.csv")
-    
+
     # initialize lists
     food_quality = []
     crowdedness = []
@@ -167,14 +210,15 @@ def add_properties():
     # for now these are the only values to choose from for all 3 new collumns.
     # Since these are for the inference model to use and not  for the user
     # these values are fairly basic to make the inference easier.
-    values = ["high", "low", "medium"]
-
+    food_quality_values = ["good", "bad"]
+    crowdedness_values = ["busy", "calm"]
+    length_of_stay_values = ["long", "short"]
 
     # create appropriatly sized new collumns
-    for i in range(len(information['addr'])):
-        food_quality.append(random.choice(values))
-        crowdedness.append(random.choice(values))
-        length_of_stay.append(random.choice(values))
+    for i in range(len(information["addr"])):
+        food_quality.append(random.choice(food_quality_values))
+        crowdedness.append(random.choice(crowdedness_values))
+        length_of_stay.append(random.choice(length_of_stay_values))
 
     information["food_quality"] = food_quality
     information["crowdedness"] = crowdedness
@@ -184,3 +228,5 @@ def add_properties():
     information.to_csv("data/restaurant_info_extra.csv")
 
 
+def capitalize_first_letter(string):
+    return string[0].upper() + string[1:]

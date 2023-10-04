@@ -23,7 +23,7 @@ if __name__ == "__main__":
         "-m",
         "--model",
         help="Select the classification model to be used: RF (Random Forest), MLP (multilayer perceptron), Majority",
-        default="RF",
+        default="neural",
         dest="intent_model",
     )
     parser.add_argument(
@@ -64,6 +64,12 @@ if __name__ == "__main__":
         help="Takes the user input in the form of speech instead of text",
         action="store_true",
         default=False,
+    )
+    parser.add_argument(
+        "--typing-speed",
+        help="Configure the typing speed multiplier of the system. Larger number means faster typing.",
+        type=float,
+        default=2,
     )
     args = parser.parse_args()
     main(args)
