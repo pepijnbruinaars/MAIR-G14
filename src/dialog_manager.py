@@ -208,17 +208,11 @@ class DialogManager:
         # Show response word for word to simulate typing
         if not self.dialog_config["verbose"]:
             print("\r\N{robot face} Bot: ", end="")
-            [
-                (
-                    print(c, end="", flush=True),
-                    time.sleep(
-                        1
-                        / self.dialog_config["typing_speed"]
-                        * random.uniform(0.005, 0.08)
-                    ),
-                )
-                for c in response
-            ]
+            for c in response:
+                print(c, end="", flush=True),
+                time.sleep(
+                    1 / self.dialog_config["typing_speed"] * random.uniform(0.005, 0.08)
+                ),
             print()
         else:
             print("\r\N{robot face} Bot: {}\n".format(response), end="")
@@ -467,6 +461,8 @@ class DialogManager:
 
         # Update restaurant information
         restaurant, other_options = self.__retrieve_restaurant(self.stored_preferences)
+        self.stored_restaurant = restaurant
+        self.stored_restaurant_options = other_options
 
         # If no options left, and no restaurant found, then we can't help the user
         if restaurant is None and other_options is None:

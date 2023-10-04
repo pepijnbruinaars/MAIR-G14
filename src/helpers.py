@@ -115,19 +115,7 @@ def prep_user_input(user_input: str):
     except LookupError:
         print("Stopwords have not yet been downloaded. Downloading now...")
         nltk.download("stopwords")
-        user_input = " ".join(
-            [
-                word
-                for word in user_input.split()
-                if (
-                    word not in stopwords.words("english")
-                    or word == "no"
-                    or word == "yes"
-                    or word == "more"
-                    or word == "not"
-                )
-            ]
-        )
+        prep_user_input(user_input)
 
     # Remove punctuation
     user_input = user_input.translate(str.maketrans("", "", string.punctuation))
