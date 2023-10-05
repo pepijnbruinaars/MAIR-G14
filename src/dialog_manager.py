@@ -106,7 +106,7 @@ class DialogManager:
         prepped_user_input = prep_user_input(user_input)
 
         # Check if user wants to exit
-        if prepped_user_input == "exit":
+        if prepped_user_input in ["exit", "quit", "bye", "goodbye"]:
             self.__add_message("exit", prepped_user_input, "User")
             self.__handle_exit()
             return
@@ -122,77 +122,32 @@ class DialogManager:
         )
 
         # Handle user intent
-        match intent:
-            case IntentType.ACK:
-                # Handle acknowledgement, which isn't very informative
-                self.__respond("Okay!")
-            case IntentType.AFFIRM:
-                # Handle affirmation, which isn't very informative either
-                self.__respond("Great!")
-            case IntentType.BYE:
-                # Exit dialog system
-                self.__handle_exit()
-            case IntentType.INFORM:
-                # Handle inform
-                self.__handle_inform(prepped_user_input)
-            case IntentType.HELLO:
-                # Generic hello message
-                self.__respond(self.message_templates["hello"])
-            case IntentType.THANKYOU:
-                # Generic thank you message
-                self.__respond(self.message_templates["thankyou"])
-            case IntentType.NEGATE, IntentType.DENY:
-                # Handle deny and negation in the same way
-                self.__handle_negate()
-            case IntentType.REQUEST:
-                # We can only handle requests if we have a restaurant
-                if self.stored_restaurant is not None:
-                    self.__handle_request(prepped_user_input, self.stored_restaurant)
-                else:
-                    self.__respond(self.message_templates["err_req"])
-            case IntentType.REQMORE:
-                # We can only handle requests if we have a restaurant and other options
-                if (
-                    self.stored_restaurant is not None
-                    and self.stored_restaurant_options is not None
-                ):
-                    self.__respond("Here are some other options:")
-                    self.__show_matches(self.stored_restaurant_options)
-                else:
-                    self.__respond(self.message_templates["err_req"])
-            case IntentType.REPEAT:
-                # Just respond the latest message sent by the bot again
-                # Find the last message with sender bot
-                last_bot_message = None
-                for message in reversed(self.message_history):
-                    if message["sender"] == "Bot":
-                        last_bot_message = message
-                        break
-                # If we found a message, repeat it
-                if last_bot_message is not None:
-                    self.__respond(last_bot_message["text"])
-                else:
-                    self.__respond("I'm sorry, I don't have anything to repeat.")
-            case IntentType.RESTART:
-                # Reset preferences and stored restaurant information
-                self.stored_restaurant = None
-                self.stored_restaurant_options = None
-                self.stored_preferences = {
-                    "food": None,
-                    "pricerange": None,
-                    "area": None,
-                }
-                self.__respond(
-                    "Your preferences have been reset! What can I do for you?"
-                )
-            case IntentType.REQALTS:
-                # Handle request for alternatives
-                self.__handle_reqalts(prepped_user_input)
-            case IntentType.CONFIRM:
-                # Handle a confirmation request
-                self.__handle_confirm(prepped_user_input)
-            case _:  # Default (null) case
-                self.__respond("I'm sorry \N{pensive face}, I don't understand.")
+        print(self.stored_restaurant)
+        print(self.stored_restaurant_options)
+        print(self.stored_preferences)
+        if (
+            self.stored_restaurant is not None
+            and self.stored_restaurant_options is None
+            and self.has_given_recommendation
+            and (
+                intent is not IntentType.REQALTS
+                or intent is not IntentType.REQMORE
+                or intent is not IntentType.REQUEST
+            )
+        ) or (
+            self.stored_restaurant is not None
+            and self.stored_restaurant_options is not None
+            and all(self.stored_preferences.values())
+            and self.has_given_recommendation
+            and (
+                intent is not IntentType.REQALTS
+                or intent is not IntentType.REQMORE
+                or intent is not IntentType.REQUEST
+            )
+        ):
+            self.__extract_and_handle_additional_preferences(prepped_user_input)
+        else:
+            self.__handle_intents(intent, prepped_user_input)
 
     def __respond(self, response: str):
         # Handle delay
@@ -287,6 +242,79 @@ class DialogManager:
             case "majority":
                 return "inform"  # This is the majority class
 
+    def __handle_intents(self, intent, prepped_user_input):
+        match intent:
+            case IntentType.ACK:
+                # Handle acknowledgement, which isn't very informative
+                self.__respond("Okay!")
+            case IntentType.AFFIRM:
+                # Handle affirmation, which isn't very informative either
+                self.__respond("Great!")
+            case IntentType.BYE:
+                # Exit dialog system
+                self.__handle_exit()
+            case IntentType.INFORM:
+                # Handle inform
+                self.__handle_inform(prepped_user_input)
+            case IntentType.HELLO:
+                # Generic hello message
+                self.__respond(self.message_templates["hello"])
+            case IntentType.THANKYOU:
+                # Generic thank you message
+                self.__respond(self.message_templates["thankyou"])
+            case IntentType.NEGATE, IntentType.DENY:
+                # Handle deny and negation in the same way
+                self.__handle_negate()
+            case IntentType.REQUEST:
+                # We can only handle requests if we have a restaurant
+                if self.stored_restaurant is not None:
+                    self.__handle_request(prepped_user_input, self.stored_restaurant)
+                else:
+                    self.__respond(self.message_templates["err_req"])
+            case IntentType.REQMORE:
+                # We can only handle requests if we have a restaurant and other options
+                if (
+                    self.stored_restaurant is not None
+                    and self.stored_restaurant_options is not None
+                ):
+                    self.__respond("Here are some other options:")
+                    self.__show_matches(self.stored_restaurant_options)
+                else:
+                    self.__respond(self.message_templates["err_req"])
+            case IntentType.REPEAT:
+                # Just respond the latest message sent by the bot again
+                # Find the last message with sender bot
+                last_bot_message = None
+                for message in reversed(self.message_history):
+                    if message["sender"] == "Bot":
+                        last_bot_message = message
+                        break
+                # If we found a message, repeat it
+                if last_bot_message is not None:
+                    self.__respond(last_bot_message["text"])
+                else:
+                    self.__respond("I'm sorry, I don't have anything to repeat.")
+            case IntentType.RESTART:
+                # Reset preferences and stored restaurant information
+                self.stored_restaurant = None
+                self.stored_restaurant_options = None
+                self.stored_preferences = {
+                    "food": None,
+                    "pricerange": None,
+                    "area": None,
+                }
+                self.__respond(
+                    "Your preferences have been reset! What can I do for you?"
+                )
+            case IntentType.REQALTS:
+                # Handle request for alternatives
+                self.__handle_reqalts(prepped_user_input)
+            case IntentType.CONFIRM:
+                # Handle a confirmation request
+                self.__handle_confirm(prepped_user_input)
+            case _:  # Default (null) case
+                self.__respond("I'm sorry \N{pensive face}, I don't understand.")
+
     def __add_message(self, intent, text, sender):
         self.message_history.append(
             {
@@ -313,34 +341,11 @@ class DialogManager:
 
         # If 1 option left, suggest it, we also cannot ask the user for additional preferences
         if restaurant is not None and other_options is None:
-            if not self.has_given_recommendation:
-                self.__respond(self.__get_suggestion_string(restaurant))
-                self.__prompt_additional_preferences()
-                self.has_given_recommendation = True
-                return True
+            self.__respond(self.__get_suggestion_string(restaurant))
+            self.__prompt_additional_preferences()
+            self.has_given_recommendation = True
+            return True
 
-            # Extract additional preferences
-            additional_preferences = self.__extract_additional_preferences(
-                prepped_user_input
-            )
-            if additional_preferences is None:
-                return True
-
-            # Filter out restaurants that don't match the additional preferences
-            if not self.stored_restaurant_options:
-                self.stored_restaurant_options = []
-            restaurants = [self.stored_restaurant] + self.stored_restaurant_options
-            restaurant, other_options, reasons = self.__additional_preferences(
-                restaurants, additional_preferences
-            )
-            print("Additional preferences")
-            if restaurant is not None:
-                reason = reasons["restaurantname" == restaurant["restaurantname"]]
-                self.__respond(self.__get_suggestion_string(restaurant))
-                self.__respond("That is because: {}".format(reason))
-                return True
-            self.__respond(self.message_templates["err_inf_no_result"])
-            return False
         # If more than 1 option left, and all preferences are filled, suggest one and ask for additional preferences
         if (
             restaurant is not None
@@ -348,36 +353,12 @@ class DialogManager:
             and all(self.stored_preferences.values())
         ):
             self.__prompt_other_preferences()  # Prompt for other required preferences
-            if not self.additional_query and not self.has_given_recommendation:
+            if not self.additional_query:
                 self.__respond(self.__get_suggestion_string(restaurant))
                 self.__prompt_additional_preferences()
                 self.has_given_recommendation = True
                 return True
 
-            # Extract additional preferences
-            additional_preferences = self.__extract_additional_preferences(
-                prepped_user_input
-            )
-            if additional_preferences is None:
-                return True
-
-            # Filter out restaurants that don't match the additional preferences
-            if not self.stored_restaurant_options:
-                self.stored_restaurant_options = []
-            restaurants = [self.stored_restaurant] + self.stored_restaurant_options
-            restaurant, other_options, reasons = self.__additional_preferences(
-                restaurants, additional_preferences
-            )
-            print("Additional preferences")
-            # Find reason where the restaurant name matches
-            if restaurant is not None:
-                reason = reasons["restaurantname" == restaurant["restaurantname"]]
-                self.__respond(self.__get_suggestion_string(restaurant))
-                self.__respond("That is because: {}".format(reason))
-                return True
-
-            # If no restaurant was found, then we can't help the user
-            self.__respond(self.message_templates["err_inf_no_result"])
             return False
 
         # If more than 1 option left, and not all preferences are filled, ask for more preferences
@@ -493,7 +474,8 @@ class DialogManager:
             self.__respond(self.__get_suggestion_string(restaurant))
 
             return True
-
+        self.__respond("There are no other options that match your preferences.")
+        self.__respond(self.__get_suggestion_string(restaurant))
         return False
 
     def __handle_confirm(self, prepped_user_input):
@@ -710,6 +692,42 @@ class DialogManager:
             return None
 
         return requirements
+
+    def __extract_and_handle_additional_preferences(self, input_string: str) -> dict:
+        # Extract additional preferences
+        additional_preferences = self.__extract_additional_preferences(input_string)
+        if additional_preferences is None:
+            return True
+
+        # Filter out restaurants that don't match the additional preferences
+        if not self.stored_restaurant_options:
+            self.stored_restaurant_options = []
+        restaurants = [self.stored_restaurant] + self.stored_restaurant_options
+        restaurant, other_options, reasons = self.__additional_preferences(
+            restaurants, additional_preferences
+        )
+
+        # If no options left, but we do have a restaurant, we suggest
+        if restaurant is not None:
+            reason = reasons["restaurantname" == restaurant["restaurantname"]]
+            self.__respond(self.__get_suggestion_string(restaurant))
+            self.__respond(
+                "That is because: {}"
+                #    Format reason with every key in the reason dict except restaurantname
+                .format(
+                    ", ".join(
+                        [
+                            f"{key} {reason[key]}"
+                            for key in reason
+                            if key != "restaurantname"
+                        ]
+                    )
+                )
+            )
+            return True
+
+        self.__respond(self.message_templates["err_inf_no_result"])
+        return False
 
     def __retrieve_restaurant(self, preferences):
         """Function which retrieves a restaurant based on the user's preferences
