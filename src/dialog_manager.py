@@ -818,7 +818,7 @@ class DialogManager:
                     reasons["touristic"] = "cheap and good food"
                     print(reasons)
                 if restaurant["food"] == "romanian":
-                    break
+                    continue
 
             # Check if preference is explicitly stated
             elif requirements["touristic"] is False:
@@ -828,23 +828,23 @@ class DialogManager:
                     restaurant["pricerange"] == "cheap"
                     and restaurant["food_quality"] == "good"
                 ):
-                    break  # restaurant touristic, try next one
+                    continue  # restaurant touristic, try next one
 
             if requirements["assigned_seats"]:
                 if restaurant["crowdedness"] == "busy":
                     reasons["assigned seats"] = "busy"
                 else:
-                    break
+                    continue
 
             elif requirements["assigned_seats"] is False:
                 if restaurant["crowdedness"] == "busy":
-                    break  # if you don't want assigned seats, busy restaurant will not work
+                    continue  # if you don't want assigned seats, busy restaurant will not work
                 else:
                     reasons["no assigned seats"] = "not busy"
 
             if requirements["children"]:
                 if restaurant["length_of_stay"] == "long":
-                    break  # if long stay, then no children --> check next restaurant
+                    continue  # if long stay, then no children --> check next restaurant
                 else:
                     reasons["children"] = "short stay"
 
@@ -852,7 +852,7 @@ class DialogManager:
                 if restaurant["length_of_stay"] == "long":
                     reasons["no children"] = "long stay"
                 else:
-                    break
+                    continue
 
             if requirements["romantic"]:
                 if (
@@ -861,16 +861,16 @@ class DialogManager:
                 ):
                     reasons["romantic"] = "not busy and long stay"
                 elif restaurant["length_of_stay"] != "long":
-                    break
+                    continue
                 elif restaurant["crowdedness"] == "busy":
-                    break
+                    continue
 
             elif requirements["romantic"] is False:
                 if (
                     restaurant["crowdedness"] != "busy"
                     and restaurant["length_of_stay"] == "long"
                 ):
-                    break
+                    continue
                 elif (
                     restaurant["crowdedness"] == "busy"
                     and restaurant["length_of_stay"] != "long"
