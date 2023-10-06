@@ -129,21 +129,13 @@ class DialogManager:
             self.stored_restaurant is not None
             and self.stored_restaurant_options is None
             and self.has_given_recommendation
-            and (
-                intent is not IntentType.REQALTS
-                or intent is not IntentType.REQMORE
-                or intent is not IntentType.REQUEST
-            )
+            and intent is IntentType.INFORM
         ) or (
             self.stored_restaurant is not None
             and self.stored_restaurant_options is not None
             and all(self.stored_preferences.values())
             and self.has_given_recommendation
-            and (
-                intent is not IntentType.REQALTS
-                or intent is not IntentType.REQMORE
-                or intent is not IntentType.REQUEST
-            )
+            and intent is IntentType.INFORM
         ):
             self.__extract_and_handle_additional_preferences(prepped_user_input)
         else:
@@ -262,7 +254,7 @@ class DialogManager:
             case IntentType.THANKYOU:
                 # Generic thank you message
                 self.__respond(self.message_templates["thankyou"])
-            case IntentType.NEGATE, IntentType.DENY:
+            case IntentType.NEGATE | IntentType.DENY:
                 # Handle deny and negation in the same way
                 self.__handle_negate()
             case IntentType.REQUEST:
