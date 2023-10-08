@@ -129,13 +129,21 @@ class DialogManager:
             self.stored_restaurant is not None
             and self.stored_restaurant_options is None
             and self.has_given_recommendation
-            and intent is IntentType.INFORM
+            and (
+                intent is not IntentType.REQALTS
+                or intent is not IntentType.REQMORE
+                or intent is not IntentType.REQUEST
+            )
         ) or (
             self.stored_restaurant is not None
             and self.stored_restaurant_options is not None
             and all(self.stored_preferences.values())
             and self.has_given_recommendation
-            and intent is IntentType.INFORM
+            and (
+                intent is not IntentType.REQALTS
+                or intent is not IntentType.REQMORE
+                or intent is not IntentType.REQUEST
+            )
         ):
             self.__extract_and_handle_additional_preferences(prepped_user_input)
         else:
