@@ -819,14 +819,14 @@ class DialogManager:
             restaurant
         ) in candidate_restaurants:  # loop over preselected restaurant options
             reasons = {}  # reasons for specific restaurant
-            print(requirements)
+            print_verbose(self.dialog_config["verbose"], requirements)
             if requirements["touristic"]:
                 if (
                     restaurant["pricerange"] == "cheap"
                     and restaurant["food_quality"] == "good"
                 ):
                     reasons["touristic"] = "cheap and good food"
-                    print(reasons)
+                    print_verbose(self.dialog_config["verbose"], reasons)
                 if restaurant["food"] == "romanian":
                     continue
 
@@ -890,7 +890,7 @@ class DialogManager:
                     reasons["not romantic"] = "busy"
                 elif restaurant["length_of_stay"] != "long":
                     reasons["not romantic"] = "short to medium stay"
-                print(reasons)
+                print_verbose(self.dialog_config["verbose"], reasons)
             chosen_restaurants = pd.concat(
                 [chosen_restaurants, pd.DataFrame([restaurant])]
             )  # add restaurant to final list
