@@ -54,6 +54,7 @@ def calculate_accuracy(preds, targets):
     return count / len(preds)
 
 
+
 # setup device agnostic code
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -107,11 +108,18 @@ DROPOUT_RATE = 0.2
 # torch.save(best_model.state_dict(), "models/mlp_model.pt")
 
 
-def fit_mlp():
+def fit_mlp(dupes = False):
     # read the data
-    df = pd.read_csv("data/splits/train_dialog_acts_no_dupes.csv")
-    training_data = pd.read_csv("data/splits/rf_training_data.csv", index_col=0)
-
+    if dupes == False:
+        df = pd.read_csv("data/splits/train_dialog_acts.csv")
+    else: 
+        df = pd.read_csv("data/splits/train_dialog_acts_no_dupes.csv")
+        
+    vectorizer = CountVectorizer()
+    vectorizer.fit_transform(df["text"])
+    training_data = vectorizer.transform(df["text"]).toarray()
+    
+    vectorizer.fit
     df["label"] = pd.factorize(df["label"])[0]
     df["label"] = df["label"].replace(-1, 14)
 
@@ -122,11 +130,11 @@ def fit_mlp():
         x, y, test_size=0.15, random_state=42
     )
 
-    x_train = torch.FloatTensor(x_train.values)
-    x_test = torch.FloatTensor(x_test.values)
+    x_train = torch.FloatTensor(x_train)
+    x_test = torch.FloatTensor(x_test)
 
-    y_train = torch.LongTensor(y_train.values)
-    y_test = torch.LongTensor(y_test.values)
+    y_train = torch.LongTensor(y_train.tolist())
+    y_test = torch.LongTensor(y_test.tolist())
 
     # setup device agnostic code
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -137,9 +145,6 @@ def fit_mlp():
     )
 
     # Save the vectorizer
-    vectorizer = CountVectorizer()
-    vectorizer.fit_transform(df["text"])
-
     with open(os.path.join("models/vectorizer.pkl"), "wb") as file:
         pickle.dump(vectorizer, file)
 
@@ -150,9 +155,43 @@ def fit_mlp():
     criterion = torch.nn.CrossEntropyLoss()
 
     # Save the model
-    best_model = training_loop(model, criterion, optimizer, verbose=False)
-    torch.save(best_model.state_dict(), "models/mlp_model.pt")
+    best_model = training_loop(model, criterion, optimizer, verbose=True)
+    if dupes == False:
+        torch.save(best_model.state_dict(), "models/mlp_model.pt")
+    else:
+        torch.save(best_model.state_dict(), "models/mlp_model_dupes.pt")
 
+def get_string_labels(num_labels):
+
+    df = pd.read_csv("data/no_duplicates_dialog_acts.csv")
+    labels = pd.factorize(df["label"])[1].tolist()
+    labels.append("null")
+    i_to_l = { i:labels[i] for i in range(len(labels))}
+
+    return [i_to_l[i] for i in num_labels]
+
+def get_labels():
+    df = pd.read_csv("data/no_duplicates_dialog_acts.csv")
+    labels = pd.factorize(df["label"])[1].tolist()
+    labels.append("null")
+
+    return labels
+
+def vectorize_data(data):
+
+    with open("models/vectorizer.pkl", "rb") as file:
+        vectorizer = pickle.load(file)
+
+    df = pd.read_csv("data/no_duplicates_dialog_acts.csv")
+    labels = pd.factorize(df["label"])[1].tolist()
+
+    labels.append("null")
+    data["label"] = data["label"].fillna("null")
+
+    x = torch.FloatTensor(vectorizer.transform(data["text"]).toarray())
+    y = torch.FloatTensor([labels.index(x) for x in data["label"]])
+
+    return x,y
 
 def predict_single_input_mlp(input):
     df = pd.read_csv("data/no_duplicates_dialog_acts.csv")
@@ -178,7 +217,10 @@ def predict_single_input_mlp(input):
     y_pred = torch.argmax(model(input_data))
 
     # Return the label of the intent
+    print(f"length array: {len(labels)}")
+    print(f"y_pred.item(): {y_pred.item()}")
     return labels[y_pred.item()]
 
 
-# print(predict_single_input_mlp("repeat"))
+#print(predict_single_input_mlp("I don't want a mexican restaurant"))
+fit_mlp(dupes = True)
