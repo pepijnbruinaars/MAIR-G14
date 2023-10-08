@@ -102,11 +102,10 @@ class DialogManager:
 
     # -------------- Interface methods --------------
     def __handle_input(self, user_input):
-        
         # Declare global raw input to use in extracting preference
         global raw_input
         raw_input = user_input
-        
+
         # Process user input
         prepped_user_input = prep_user_input(user_input)
 
@@ -127,9 +126,9 @@ class DialogManager:
         )
 
         # Handle user intent
-        print(self.stored_restaurant)
-        print(self.stored_restaurant_options)
-        print(self.stored_preferences)
+        print_verbose(self.dialog_config['verbose'], self.stored_restaurant)
+        print_verbose(self.dialog_config['verbose'], self.stored_restaurant_options)
+        print_verbose(self.dialog_config['verbose'], self.stored_preferences)
         if (
             self.stored_restaurant is not None
             and self.stored_restaurant_options is None
@@ -581,11 +580,20 @@ class DialogManager:
         area_match = re.search(rf"{area_regex}", input_string)
         price_match = re.search(rf"{price_regex}", input_string)
 
-        any_match_food = re.search(r"(any|all|does not matter|regardless|whatever).*(food|restaurant|kitchen)", raw_input.lower())
-        any_match_area = re.search(r"(any|all|does not matter|regardless|whatever).*(area|town|where)", raw_input.lower())
-        any_match_price = re.search(r"(any|all|does not matter|regardless|whatever).*(price|cost)", raw_input.lower())
-        
-        print(raw_input)
+        any_match_food = re.search(
+            r"(any|all|does not matter|regardless|whatever).*(food|restaurant|kitchen)",
+            raw_input.lower(),
+        )
+        any_match_area = re.search(
+            r"(any|all|does not matter|regardless|whatever).*(area|town|where)",
+            raw_input.lower(),
+        )
+        any_match_price = re.search(
+            r"(any|all|does not matter|regardless|whatever).*(price|cost)",
+            raw_input.lower(),
+        )
+
+        print_verbose(self.dialog_config["verbose"], f"Raw input: {raw_input}")
         # If we find something, we don't need to look for something mistyped anymore
         # Look for exact matches
         found_something = False
@@ -602,11 +610,11 @@ class DialogManager:
             found_something = True
 
         if any_match_food:
-            preferences["food"] = "don't care"
+            preferences["food"] = "any"
         if any_match_area:
-            preferences["area"] = "don't care"        
+            preferences["area"] = "any"
         if any_match_price:
-            preferences["price"] = "don't care"
+            preferences["price"] = "any"
 
         if updatePreference:
             self.stored_preferences.update(preferences)
@@ -764,11 +772,11 @@ class DialogManager:
         if pref_type is None and pref_area is None and pref_price is None:
             return None, None
 
-        if pref_type is not None and pref_type != "don't care":
+        if pref_type is not None and pref_type != "any":
             data = data[data["food"] == pref_type]
-        if pref_area is not None and pref_area != "don't care":
+        if pref_area is not None and pref_area != "any":
             data = data[data["area"] == pref_area]
-        if pref_price is not None and pref_price != "don't care":
+        if pref_price is not None and pref_price != "any":
             data = data[data["pricerange"] == pref_price]
 
         if len(data) == 1:
