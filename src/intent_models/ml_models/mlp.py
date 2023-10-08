@@ -116,10 +116,10 @@ def fit_mlp(dupes = False):
         df = pd.read_csv("data/splits/train_dialog_acts_no_dupes.csv")
         
     vectorizer = CountVectorizer()
-    vectorizer.fit_transform(df["text"])
+    df_all_words = pd.read_csv("data/splits/train_dialog_acts.csv")
+    vectorizer.fit_transform(df_all_words["text"])
     training_data = vectorizer.transform(df["text"]).toarray()
-    
-    vectorizer.fit
+
     df["label"] = pd.factorize(df["label"])[0]
     df["label"] = df["label"].replace(-1, 14)
 
@@ -217,8 +217,6 @@ def predict_single_input_mlp(input):
     y_pred = torch.argmax(model(input_data))
 
     # Return the label of the intent
-    print(f"length array: {len(labels)}")
-    print(f"y_pred.item(): {y_pred.item()}")
     return labels[y_pred.item()]
 
 
