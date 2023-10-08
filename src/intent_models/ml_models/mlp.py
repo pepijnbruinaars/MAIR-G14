@@ -115,10 +115,10 @@ def fit_mlp(dupes=False):
         df = pd.read_csv("data/splits/train_dialog_acts_no_dupes.csv")
 
     vectorizer = CountVectorizer()
-    vectorizer.fit_transform(df["text"])
+    df_all_words = pd.read_csv("data/splits/train_dialog_acts_no_dupes.csv")
+    vectorizer.fit_transform(df_all_words["text"])
     training_data = vectorizer.transform(df["text"]).toarray()
 
-    vectorizer.fit
     df["label"] = pd.factorize(df["label"])[0]
     df["label"] = df["label"].replace(-1, 14)
 
@@ -154,7 +154,7 @@ def fit_mlp(dupes=False):
     criterion = torch.nn.CrossEntropyLoss()
 
     # Save the model
-    best_model = training_loop(model, criterion, optimizer, verbose=True)
+    best_model = training_loop(model, criterion, optimizer, verbose=False)
     if not dupes:
         torch.save(best_model.state_dict(), "models/mlp_model.pt")
     else:
@@ -200,7 +200,7 @@ def predict_single_input_mlp(input):
     labels.append("null")
 
     # load the vectorizer from data
-    if os.path.exists("models/mlp_model.pt") is False:
+    if os.path.exists("models/mlp_model.pt") == False:
         fit_mlp()
 
     with open("models/vectorizer.pkl", "rb") as file:
@@ -218,10 +218,6 @@ def predict_single_input_mlp(input):
     y_pred = torch.argmax(model(input_data))
 
     # Return the label of the intent
-    print(f"length array: {len(labels)}")
-    print(f"y_pred.item(): {y_pred.item()}")
     return labels[y_pred.item()]
 
-
 # print(predict_single_input_mlp("I don't want a mexican restaurant"))
-# fit_mlp(dupes=True)
