@@ -171,9 +171,10 @@ class DialogManager:
             print("\r\N{robot face} Bot: ", end="")
             for c in response:
                 print(c, end="", flush=True),
-                time.sleep(
-                    1 / self.dialog_config["typing_speed"] * random.uniform(0.005, 0.08)
-                ),
+                if self.dialog_config["typing_speed"] != 0:
+                    time.sleep(
+                        1 / self.dialog_config["typing_speed"] * random.uniform(0.005, 0.08)
+                    ),
             print()
         else:
             print("\r\N{robot face} Bot: {}\n".format(response), end="")
