@@ -54,7 +54,6 @@ def calculate_accuracy(preds, targets):
     return count / len(preds)
 
 
-
 # setup device agnostic code
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -108,13 +107,13 @@ DROPOUT_RATE = 0.2
 # torch.save(best_model.state_dict(), "models/mlp_model.pt")
 
 
-def fit_mlp(dupes = False):
+def fit_mlp(dupes=False):
     # read the data
-    if dupes == False:
+    if not dupes:
         df = pd.read_csv("data/splits/train_dialog_acts.csv")
-    else: 
+    else:
         df = pd.read_csv("data/splits/train_dialog_acts_no_dupes.csv")
-        
+
     vectorizer = CountVectorizer()
     df_all_words = pd.read_csv("data/splits/train_dialog_acts_no_dupes.csv")
     vectorizer.fit_transform(df_all_words["text"])
@@ -156,19 +155,20 @@ def fit_mlp(dupes = False):
 
     # Save the model
     best_model = training_loop(model, criterion, optimizer, verbose=False)
-    if dupes == False:
+    if not dupes:
         torch.save(best_model.state_dict(), "models/mlp_model.pt")
     else:
         torch.save(best_model.state_dict(), "models/mlp_model_dupes.pt")
 
-def get_string_labels(num_labels):
 
+def get_string_labels(num_labels):
     df = pd.read_csv("data/no_duplicates_dialog_acts.csv")
     labels = pd.factorize(df["label"])[1].tolist()
     labels.append("null")
-    i_to_l = { i:labels[i] for i in range(len(labels))}
+    i_to_l = {i: labels[i] for i in range(len(labels))}
 
     return [i_to_l[i] for i in num_labels]
+
 
 def get_labels():
     df = pd.read_csv("data/no_duplicates_dialog_acts.csv")
@@ -177,8 +177,8 @@ def get_labels():
 
     return labels
 
-def vectorize_data(data):
 
+def vectorize_data(data):
     with open("models/vectorizer.pkl", "rb") as file:
         vectorizer = pickle.load(file)
 
@@ -191,7 +191,8 @@ def vectorize_data(data):
     x = torch.FloatTensor(vectorizer.transform(data["text"]).toarray())
     y = torch.FloatTensor([labels.index(x) for x in data["label"]])
 
-    return x,y
+    return x, y
+
 
 def predict_single_input_mlp(input):
     df = pd.read_csv("data/no_duplicates_dialog_acts.csv")
@@ -219,5 +220,4 @@ def predict_single_input_mlp(input):
     # Return the label of the intent
     return labels[y_pred.item()]
 
-
-#print(predict_single_input_mlp("I don't want a mexican restaurant"))
+# print(predict_single_input_mlp("I don't want a mexican restaurant"))

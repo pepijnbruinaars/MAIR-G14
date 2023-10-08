@@ -4,7 +4,6 @@ Created on Tue Sep 12 14:32:40 2023
 
 @author: 13vic
 """
-from enum import unique
 import joblib
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.feature_extraction.text import CountVectorizer
@@ -23,7 +22,7 @@ from sklearn.metrics import (
     # confusion_matrix,
     precision_score,
     recall_score,
-    ConfusionMatrixDisplay
+    ConfusionMatrixDisplay,
 )
 
 
@@ -51,8 +50,6 @@ def process_data(df):
     # categorize the label data as numerical data, (null = -1), using pd.factorize
     df_copy["label"] = pd.factorize(df_copy["label"])[0]
 
-    
-
     # Use the Sklearn method of countVectorizer to make a matrix of word counts
     # this method also tokenizes implicitly
     vectorizer = CountVectorizer()
@@ -66,8 +63,6 @@ def process_data(df):
     # colomns
     features = vectorizer.get_feature_names_out()
     training_data = pd.DataFrame(data=bag_of_words, columns=features)
-    
-    
 
     with open("models/RFvectorizer.pkl", "wb") as file:
         pickle.dump(vectorizer, file)
@@ -102,7 +97,7 @@ def predict_single_input_rf(input):
     # Get the training data
     labels = pd.factorize(train_data_no_dupes["label"])[1].tolist()
     labels.append("null")
-    
+
     # load the vectorizer from training data processing
     try:
         with open("models/RFvectorizer.pkl", "rb") as file:
@@ -238,8 +233,6 @@ def generate_random_forest():
 def test_accuracy(DATA, FOREST=False, OPTIMIZED_FOREST=False):
     # Get the training data
     x_train, x_test, y_train, y_test, _ = process_data(DATA)
-    
-    
 
     # Train the model, currently this is only the (optimized) forest model
     if FOREST:
@@ -257,7 +250,7 @@ def test_accuracy(DATA, FOREST=False, OPTIMIZED_FOREST=False):
             model = joblib.load("models/optimized_random_forest.joblib")
         except FileNotFoundError:
             # Random forest model with optimized parameters, boolean for finding new parameters.
-            model = optimize_hyperparameters(x_train, y_train, False)     
+            model = optimize_hyperparameters(x_train, y_train, False)
             # Save model to models folder
             joblib.dump(model, "models/random_forest.joblib")
 
@@ -265,42 +258,39 @@ def test_accuracy(DATA, FOREST=False, OPTIMIZED_FOREST=False):
     else:
         print("No valid model selected")
         return
-    
+
     # Average lenght of vector in training data
     new = pd.read_csv("data/splits/rf_training_data.csv")
     del new["Unnamed: 0"]
-    df = new.sum(axis = 1) 
+    df = new.sum(axis=1)
     print(df.mean(axis=0))
-    
 
     # predict values
-    y_pred = model.predict(x_test)  
+    y_pred = model.predict(x_test)
 
     # test the accuracy
     accuracy = accuracy_score(y_test, y_pred)
-    recall = recall_score(y_test, y_pred, average= None)
-    precision = precision_score(y_test, y_pred, average= None)
+    recall = recall_score(y_test, y_pred, average=None)
+    precision = precision_score(y_test, y_pred, average=None)
 
     print(f"Accuracy of {chosen_model}", accuracy)
     print(f"recall of {chosen_model}", recall)
     print(f"precision of {chosen_model}", precision)
-    
+
     fig, ax = plt.subplots(figsize=(10, 5))
     ConfusionMatrixDisplay.from_predictions(y_test, y_pred, ax=ax)
-    
-    # get y_axis for confusion matrix, omit 9 and 11 as it is not in the y_test data    
+
+    # get y_axis for confusion matrix, omit 9 and 11 as it is not in the y_test data
     uniques = pd.factorize(train_data_no_dupes["label"])[1].tolist()
-    uniques.insert(0,"null")
+    uniques.insert(0, "null")
     del uniques[9]
     del uniques[11]
     # x_axis for readability
-    x_axis = [-1,0,1,2,3,4,5,6,7,8,10,12]
+    x_axis = [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12]
     ax.xaxis.set_ticklabels(x_axis)
     ax.yaxis.set_ticklabels(uniques)
 
     plt.savefig(f"Confusion_matrix_{chosen_model}")
-
-    
 
 
 if __name__ == "__main__":
