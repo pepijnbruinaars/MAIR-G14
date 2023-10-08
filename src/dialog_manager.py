@@ -134,9 +134,10 @@ class DialogManager:
             and self.stored_restaurant_options is None
             and self.has_given_recommendation
             and (
-                intent is not IntentType.REQALTS
-                or intent is not IntentType.REQMORE
-                or intent is not IntentType.REQUEST
+                intent != IntentType.REQALTS
+                and intent != IntentType.REQMORE
+                and intent != IntentType.REQUEST
+                and intent != IntentType.RESTART
             )
         ) or (
             self.stored_restaurant is not None
@@ -144,9 +145,10 @@ class DialogManager:
             and all(self.stored_preferences.values())
             and self.has_given_recommendation
             and (
-                intent is not IntentType.REQALTS
-                or intent is not IntentType.REQMORE
-                or intent is not IntentType.REQUEST
+                intent != IntentType.REQALTS
+                and intent != IntentType.REQMORE
+                and intent != IntentType.REQUEST
+                and intent != IntentType.RESTART
             )
         ):
             self.__extract_and_handle_additional_preferences(prepped_user_input)
@@ -1027,7 +1029,6 @@ class DialogManager:
             # If distance is 0, then we have a perfect match
             if dist == 0:
                 return
-
             # If distance is less than a certain distance (default = 2), then we have a match
             if dist <= self.dialog_config["levenshtein"]:
                 matches.append(
