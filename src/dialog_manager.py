@@ -126,9 +126,9 @@ class DialogManager:
         )
 
         # Handle user intent
-        print_verbose(self.dialog_config['verbose'], self.stored_restaurant)
-        print_verbose(self.dialog_config['verbose'], self.stored_restaurant_options)
-        print_verbose(self.dialog_config['verbose'], self.stored_preferences)
+        print_verbose(self.dialog_config["verbose"], self.stored_restaurant)
+        print_verbose(self.dialog_config["verbose"], self.stored_restaurant_options)
+        print_verbose(self.dialog_config["verbose"], self.stored_preferences)
         if (
             self.stored_restaurant is not None
             and self.stored_restaurant_options is None
@@ -581,15 +581,15 @@ class DialogManager:
         price_match = re.search(rf"{price_regex}", input_string)
 
         any_match_food = re.search(
-            r"(any|all|does not matter|regardless|whatever).*(food|restaurant|kitchen)",
+            r"(any|all|does not matter|dont care|regardless|whatever).*(food|restaurant|kitchen)",
             raw_input.lower(),
         )
         any_match_area = re.search(
-            r"(any|all|does not matter|regardless|whatever).*(area|town|where)",
+            r"(any|all|does not matter|dont care|regardless|whatever).*(area|town|where)",
             raw_input.lower(),
         )
         any_match_price = re.search(
-            r"(any|all|does not matter|regardless|whatever).*(price|cost)",
+            r"(any|all|does not matter|dont care|regardless|whatever).*(price|cost)",
             raw_input.lower(),
         )
 
@@ -614,7 +614,7 @@ class DialogManager:
         if any_match_area:
             preferences["area"] = "any"
         if any_match_price:
-            preferences["price"] = "any"
+            preferences["pricerange"] = "any"
 
         if updatePreference:
             self.stored_preferences.update(preferences)
@@ -858,7 +858,7 @@ class DialogManager:
                     restaurant["pricerange"] == "cheap"
                     and restaurant["food_quality"] == "good"
                 ):
-                    reasons["touristic"] = "cheap and good food"
+                    reasons["touristic"] = "It has cheap and good food."
                     print_verbose(self.dialog_config["verbose"], reasons)
                 if restaurant["food"] == "romanian":
                     continue
@@ -866,7 +866,9 @@ class DialogManager:
             # Check if preference is explicitly stated
             elif requirements["touristic"] is False:
                 if restaurant["food"] == "romanian":
-                    reasons["not touristic"] = "romanian"  # add this to reasoning
+                    reasons[
+                        "not touristic"
+                    ] = "It serves Romanian food, which tourists don't enjoy."  # add this to reasoning
                 elif (
                     restaurant["pricerange"] == "cheap"
                     and restaurant["food_quality"] == "good"
@@ -883,17 +885,17 @@ class DialogManager:
                 if restaurant["crowdedness"] == "busy":
                     continue  # if you don't want assigned seats, busy restaurant will not work
                 else:
-                    reasons["no assigned seats"] = "not busy"
+                    reasons["no assigned seats"] = "The restaurant is not busy."
 
             if requirements["children"]:
                 if restaurant["length_of_stay"] == "long":
                     continue  # if long stay, then no children --> check next restaurant
                 else:
-                    reasons["children"] = "short stay"
+                    reasons["children"] = "The restaurant is meant for short stays."
 
             elif requirements["children"] is False:
                 if restaurant["length_of_stay"] == "long":
-                    reasons["no children"] = "long stay"
+                    reasons["no children"] = "The restaurant is meant for long stays."
                 else:
                     continue
 
@@ -902,7 +904,9 @@ class DialogManager:
                     restaurant["crowdedness"] != "busy"
                     and restaurant["length_of_stay"] == "long"
                 ):
-                    reasons["romantic"] = "not busy and long stay"
+                    reasons[
+                        "romantic"
+                    ] = "The restaurant is not busy and allows for a long stay."
                 elif restaurant["length_of_stay"] != "long":
                     continue
                 elif restaurant["crowdedness"] == "busy":
@@ -918,11 +922,15 @@ class DialogManager:
                     restaurant["crowdedness"] == "busy"
                     and restaurant["length_of_stay"] != "long"
                 ):
-                    reasons["not romantic"] = "busy and short stay"
+                    reasons[
+                        "not romantic"
+                    ] = "The restaurant is busy and only allows short stays."
                 elif restaurant["crowdedness"] == "busy":
-                    reasons["not romantic"] = "busy"
+                    reasons["not romantic"] = "The restaurant is busy."
                 elif restaurant["length_of_stay"] != "long":
-                    reasons["not romantic"] = "short to medium stay"
+                    reasons[
+                        "not romantic"
+                    ] = "The restaurant only allows for short to medium stays."
                 print_verbose(self.dialog_config["verbose"], reasons)
             chosen_restaurants = pd.concat(
                 [chosen_restaurants, pd.DataFrame([restaurant])]
