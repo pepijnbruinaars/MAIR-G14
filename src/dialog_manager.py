@@ -60,6 +60,7 @@ class DialogConfig(TypedDict):
     delay: float  # Optional delay before the system responds
     speech: bool  # Whether to take user input as speech or not
     typing_speed: float  # Optional typing speed multiplier for the system
+    gender: str
 
 
 class Message(TypedDict):
@@ -163,12 +164,23 @@ class DialogManager:
 
         # Handle caps
         response = response.upper() if self.dialog_config["caps"] else response
-
+        emoji = "\N{robot face}"
+        name = "Bot"
+        match self.dialog_config["gender"]:
+            case "male":
+                emoji = "\N{man}"
+                name = "John"
+            case "female":
+                emoji = "\N{woman}"
+                name = "Jane"
+            case _:  # Default (null) case
+                emoji = "\N{robot face}"
+                name = "Bot"
         # Add message to history and display
         self.__add_message(None, response, "Bot")
         # Show response word for word to simulate typing
         if not self.dialog_config["verbose"]:
-            print("\r\N{robot face} Bot: ", end="")
+            print(f"\r{emoji} {name}: ", end="")
             for c in response:
                 print(c, end="", flush=True),
                 if self.dialog_config["typing_speed"] != 0:
@@ -177,7 +189,7 @@ class DialogManager:
                     ),
             print()
         else:
-            print("\r\N{robot face} Bot: {}\n".format(response), end="")
+            print("\r{} {}: {}\n".format(emoji, name, response), end="")
 
         # Handle text to speech
         self.__handle_tts(response) if self.dialog_config["tts"] else None
@@ -208,11 +220,23 @@ class DialogManager:
     def __handle_delay(self):
         start_time = time.time()
         counter = 1
+        emoji = "\N{robot face}"
+        name = "Bot"
+        match self.dialog_config["gender"]:
+            case "male":
+                emoji = "\N{man}"
+                name = "John"
+            case "female":
+                emoji = "\N{woman}"
+                name = "Jane"
+            case _:  # Default (null) case
+                emoji = "\N{robot face}"
+                name = "Bot"
         while time.time() - start_time < self.dialog_config["delay"]:
             if counter > 3:
-                print(f"\N{robot face} Bot: {' ' * counter}", end="\r")
+                print(f"{emoji} {name}: {' ' * counter}", end="\r")
                 counter = 0
-            print(f"\N{robot face} Bot: {'.' * counter}", end="\r")
+            print(f"{emoji} {name}: {'.' * counter}", end="\r")
             counter += 1
             time.sleep(0.1)
 
