@@ -6,6 +6,7 @@ from helpers import (
     prep_user_input,
     de_emojify,
     print_verbose,
+    get_identity,
 )  # noqa
 
 # Necessary to hide the pygame import message
@@ -14,6 +15,7 @@ os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 from intent_models.ml_models.random_forest import predict_single_input_rf  # noqa
 from intent_models.baselines.keyword_matching import match_sentence  # noqa
 from intent_models.ml_models.mlp import predict_single_input_mlp  # noqa
+from voice_model import text_to_speech, Speakers  # noqa
 from Levenshtein import distance  # noqa
 from typing import TypedDict  # noqa
 from textwrap import dedent  # noqa
@@ -80,6 +82,7 @@ class DialogManager:
         self.done = False
         self.message_templates = get_message_templates()
         self.message_history: list[Message] = []
+        self.emoji, self.name = get_identity(dialog_config["gender"])
 
         self.stored_preferences = {
             "food": None,
@@ -164,23 +167,15 @@ class DialogManager:
 
         # Handle caps
         response = response.upper() if self.dialog_config["caps"] else response
-        emoji = "\N{robot face}"
-        name = "Bot"
-        match self.dialog_config["gender"]:
-            case "male":
-                emoji = "\N{man}"
-                name = "John"
-            case "female":
-                emoji = "\N{woman}"
-                name = "Jane"
-            case _:  # Default (null) case
-                emoji = "\N{robot face}"
-                name = "Bot"
+
+        # Handle text to speech
+        self.__handle_tts(response) if self.dialog_config["tts"] else None
+
         # Add message to history and display
-        self.__add_message(None, response, "Bot")
+        self.__add_message(None, response, self.name)
         # Show response word for word to simulate typing
         if not self.dialog_config["verbose"]:
-            print(f"\r{emoji} {name}: ", end="")
+            print(f"\r{self.emoji} {self.name}: ", end="")
             for c in response:
                 print(c, end="", flush=True),
                 if self.dialog_config["typing_speed"] != 0:
@@ -189,18 +184,15 @@ class DialogManager:
                     ),
             print()
         else:
-            print("\r{} {}: {}\n".format(emoji, name, response), end="")
-
-        # Handle text to speech
-        self.__handle_tts(response) if self.dialog_config["tts"] else None
+            print("\r{} {}: {}\n".format(self.emoji, self.name, response), end="")
 
     def __print_message_history(self):
         if self.dialog_config["verbose"]:
             print("\n------------- Message history -------------")
             for message in self.message_history:
                 emoji = (
-                    "\N{robot face}"
-                    if message["sender"].lower() == "bot"
+                    self.emoji
+                    if message["sender"].lower() == self.name.lower()
                     else "\N{bust in silhouette}"
                 )
                 if message["classified_intent"]:
@@ -220,30 +212,19 @@ class DialogManager:
     def __handle_delay(self):
         start_time = time.time()
         counter = 1
-        emoji = "\N{robot face}"
-        name = "Bot"
-        match self.dialog_config["gender"]:
-            case "male":
-                emoji = "\N{man}"
-                name = "John"
-            case "female":
-                emoji = "\N{woman}"
-                name = "Jane"
-            case _:  # Default (null) case
-                emoji = "\N{robot face}"
-                name = "Bot"
         while time.time() - start_time < self.dialog_config["delay"]:
             if counter > 3:
-                print(f"{emoji} {name}: {' ' * counter}", end="\r")
+                print(f"{self.emoji} {self.name}: {' ' * counter}", end="\r")
                 counter = 0
-            print(f"{emoji} {name}: {'.' * counter}", end="\r")
+            print(f"{self.emoji} {self.name}: {'.' * counter}", end="\r")
             counter += 1
             time.sleep(0.1)
 
     # -------------- Public methods --------------
     def start_dialog(self):
+        _, name = get_identity(self.dialog_config["gender"])
         self.__respond(
-            self.message_templates["welcome"] + "\n" + "\tWhat can I do for you?"
+            self.message_templates["welcome"].replace("I am", f"I am {name},") + "\n" + "\tWhat can I do for you?"
         )
         try:
             self.__dialog_loop()
@@ -550,22 +531,8 @@ class DialogManager:
 
     # -------------- Speech methods --------------
     def __handle_tts(self, response: str):
-        # Convert text to speech
-        mp3_fp = BytesIO()
-        tts = gTTS(de_emojify(response), lang="en", tld="com")
-        tts.write_to_fp(mp3_fp)
-
-        # Rewind to beginning of the audio bytes
-        mp3_fp.seek(0)
-
-        # Play audio
-        pygame.mixer.init(frequency=44100)
-        pygame.mixer.music.load(mp3_fp, "mp3")
-        pygame.mixer.music.play()
-
-        # Wait for audio to finish
-        while pygame.mixer.music.get_busy():
-            pygame.time.wait(100)  # ms
+        speaker = Speakers.FEMALE if self.dialog_config["gender"] == "female" else Speakers.MALE
+        text_to_speech(de_emojify(response), speaker)
 
     def __handle_speech(self):
         recognizer = sr.Recognizer()
@@ -1031,7 +998,7 @@ class DialogManager:
             return dedent(
                 f"""\
                 {suggestion_prefixes[random.randint(0, len(suggestion_prefixes) - 1)]}
-                 {capitalize_first_letter(restaurant['restaurantname'])}.
+                {capitalize_first_letter(restaurant['restaurantname'])}.
                 It's {self.__get_word_prefix(restaurant['pricerange'])}
                 {'moderately priced' if restaurant['pricerange'] == 'moderate' else restaurant['pricerange']}
                 restaurant and serves {capitalize_first_letter(restaurant['food'])} food.

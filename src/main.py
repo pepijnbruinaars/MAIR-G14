@@ -72,7 +72,10 @@ if __name__ == "__main__":
         default=2,
     )
     parser.add_argument(
-        "-g", "--gender", help="'Gender' of the bot", type=str, default="none"
+        "-g", "--gender",
+        help="Gender' of the bot",
+        type=str,
+        default="none"
     )
     args = parser.parse_args()
     main(args)
