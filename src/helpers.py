@@ -34,7 +34,7 @@ def get_message_templates():
     return {
         # Intent messages
         "welcome": (
-            """Hello, I am a restaurant recommender chatbot \N{rocket}.
+            """Hello, I am here to help you find a suitable restaurant \N{rocket}.
             \r\tTo exit, just type 'exit'!
             \r\tI can find you a restaurant using the following preferences:
             - food \N{fork and knife}
@@ -52,6 +52,22 @@ def get_message_templates():
         "err_neg_next_step": "I'm sorry \N{pensive face}, I can't help you with that.",
         "err_neg_no_options": "I'm sorry \N{pensive face}, there are no other options that match your preferences.",
     }
+
+
+def get_identity(gender):
+    emoji = "\N{robot face}"
+    name = "Bot"
+    match gender:
+        case "male" | "man":
+            emoji = "\N{man}"
+            name = "John"
+        case "female" | "woman":
+            emoji = "\N{woman}"
+            name = "Jane"
+        case _:  # Default (null) case
+            emoji = "\N{robot face}"
+            name = "Bot"
+    return emoji, name
 
 
 def load_csv_data(filepath):
