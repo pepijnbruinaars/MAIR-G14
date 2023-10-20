@@ -169,7 +169,9 @@ class DialogManager:
         response = response.upper() if self.dialog_config["caps"] else response
 
         # Handle text to speech
-        self.__handle_tts(response) if self.dialog_config["tts"] else None
+        if self.dialog_config["tts"]:
+            self.__handle_tts(response)
+            return
 
         # Add message to history and display
         self.__add_message(None, response, self.name)
@@ -180,7 +182,9 @@ class DialogManager:
                 print(c, end="", flush=True),
                 if self.dialog_config["typing_speed"] != 0:
                     time.sleep(
-                        1 / self.dialog_config["typing_speed"] * random.uniform(0.005, 0.08)
+                        1
+                        / self.dialog_config["typing_speed"]
+                        * random.uniform(0.005, 0.08)
                     ),
             print()
         else:
@@ -224,7 +228,9 @@ class DialogManager:
     def start_dialog(self):
         _, name = get_identity(self.dialog_config["gender"])
         self.__respond(
-            self.message_templates["welcome"].replace("I am", f"I am {name},") + "\n" + "\tWhat can I do for you?"
+            self.message_templates["welcome"].replace("I am", f"I am {name},")
+            + "\n"
+            + "\tWhat can I do for you?"
         )
         try:
             self.__dialog_loop()
@@ -531,8 +537,50 @@ class DialogManager:
 
     # -------------- Speech methods --------------
     def __handle_tts(self, response: str):
-        speaker = Speakers.FEMALE if self.dialog_config["gender"] == "female" else Speakers.MALE
-        text_to_speech(de_emojify(response), speaker)
+        # Add message to history and display
+        self.__add_message(None, response, self.name)
+
+        # Get speaker
+        speaker = (
+            Speakers.FEMALE
+            if self.dialog_config["gender"] == "female"
+            else Speakers.MALE
+        )
+
+        org_sentences = [
+            sentence
+            for sentence in re.split("(?<=[!?.\r\n])", response)
+            if sentence.lstrip() not in ["\r", "\n", ""]
+        ]
+
+        # 
+        sentences = [
+            sentence.lstrip().replace("\n", "").__repr__().replace("'", "")
+            for sentence in re.split("(?<=[!?.\r\n])", de_emojify(response))
+            if sentence.lstrip() != ""
+        ]
+
+        for text, voice_text in zip(org_sentences, sentences):
+            text_to_speech(voice_text, speaker)
+            print('\r\033[K', end='')
+
+            # Show text word for word to simulate typing
+            if not self.dialog_config["verbose"]:
+                print(f"\r{self.emoji} {self.name}: ", end="")
+                for c in text:
+                    print(c, end="", flush=True),
+                    if self.dialog_config["typing_speed"] != 0:
+                        time.sleep(
+                            1
+                            / self.dialog_config["typing_speed"]
+                            * random.uniform(0.005, 0.08)
+                        ),
+                print()
+            else:
+                print("\r{text}\n", end="")        
+
+        # while pygame.mixer.music.get_busy():
+        #     pygame.time.wait(100)
 
     def __handle_speech(self):
         recognizer = sr.Recognizer()
