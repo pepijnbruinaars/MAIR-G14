@@ -84,12 +84,14 @@ def text_to_speech(text, speaker=None):
         # Stop the delay print
         stop_event.set()
 
-    # # TODO CHECK INIT MIXER IF NOT THEN SKIP
-    # if pygame.mixer != None:
-    #     # Wait until voice is done with going to the next sentence
-    #     while pygame.mixer.music.get_busy():
-    #         pygame.time.wait(100)
+        # Clear ... line
+        print("\r\033[K", end="")
 
+    # If mixer is still playing do not play new audio
+    if pygame.mixer.get_init() is not None:
+        # Wait until voice is done with going to the next sentence
+        while pygame.mixer.music.get_busy():
+            pygame.time.wait(100)
 
     # Create memory file from audio
     mp3_fp = BytesIO()
