@@ -169,7 +169,9 @@ class DialogManager:
         response = response.upper() if self.dialog_config["caps"] else response
 
         # Handle text to speech
-        self.__handle_tts(response) if self.dialog_config["tts"] else None
+        if self.dialog_config["tts"]:
+            self.__handle_tts(response)
+            return
 
         # Add message to history and display
         self.__add_message(None, response, self.name)
@@ -180,7 +182,9 @@ class DialogManager:
                 print(c, end="", flush=True),
                 if self.dialog_config["typing_speed"] != 0:
                     time.sleep(
-                        1 / self.dialog_config["typing_speed"] * random.uniform(0.005, 0.08)
+                        1
+                        / self.dialog_config["typing_speed"]
+                        * random.uniform(0.005, 0.08)
                     ),
             print()
         else:
@@ -206,6 +210,11 @@ class DialogManager:
 
     def __handle_exit(self):
         self.__respond("Goodbye! \N{waving hand sign}")
+        # If mixer is still playing do not exit yet
+        if pygame.mixer.get_init() is not None:
+            # Wait until voice is done with going to the next sentence
+            while pygame.mixer.music.get_busy():
+                pygame.time.wait(100)
         self.__print_message_history()
         self.done = True
 
@@ -224,7 +233,9 @@ class DialogManager:
     def start_dialog(self):
         _, name = get_identity(self.dialog_config["gender"])
         self.__respond(
-            self.message_templates["welcome"].replace("I am", f"I am {name},") + "\n" + "\tWhat can I do for you?"
+            self.message_templates["welcome"].replace("I am", f"I am {name},")
+            + "\n"
+            + "\tWhat can I do for you?"
         )
         try:
             self.__dialog_loop()
@@ -531,8 +542,51 @@ class DialogManager:
 
     # -------------- Speech methods --------------
     def __handle_tts(self, response: str):
-        speaker = Speakers.FEMALE if self.dialog_config["gender"] == "female" else Speakers.MALE
-        text_to_speech(de_emojify(response), speaker)
+        # Add message to history and display
+        self.__add_message(None, response, self.name)
+
+        # Get speaker
+        speaker = (
+            Speakers.FEMALE
+            if self.dialog_config["gender"] == "female"
+            else Speakers.MALE
+        )
+
+        # Keep original sentences for printing but in split format
+        org_sentences = [
+            sentence
+            for sentence in re.split("(?<=[!?.\r\n])", response)
+            if sentence.lstrip() not in ["\r", "\n", ""]
+        ]
+
+        # prepare sentences for voice synthesization
+        sentences = [
+            sentence.lstrip().replace("\n", "").__repr__().replace("'", "")
+            for sentence in re.split("(?<=[!?.\r\n])", de_emojify(response))
+            if sentence.lstrip() != ""
+        ]
+
+        # Print and generate voice
+        for index, (text, voice_text) in enumerate(zip(org_sentences, sentences)):
+            text_to_speech(voice_text, speaker)
+
+            prefix = f"{self.emoji} {self.name}: " if index == 0 else " " * (len(self.name) + 4)
+            print(prefix, end="")
+
+            # Show text word for word to simulate typing
+            if not self.dialog_config["verbose"]:
+                for c in text:
+                    print(c, end="", flush=True),
+                    if self.dialog_config["typing_speed"] != 0:
+                        time.sleep(
+                            1
+                            / self.dialog_config["typing_speed"]
+                            * random.uniform(0.005, 0.08)
+                        ),
+                print() if "\n" not in text else print("", end="")
+            else:
+                print(text, end="")
+                print() if "\n" not in text else print("", end="")
 
     def __handle_speech(self):
         recognizer = sr.Recognizer()
@@ -1002,7 +1056,7 @@ class DialogManager:
                 It's {self.__get_word_prefix(restaurant['pricerange'])}
                 {'moderately priced' if restaurant['pricerange'] == 'moderate' else restaurant['pricerange']}
                 restaurant and serves {capitalize_first_letter(restaurant['food'])} food.
-                 It is located in the {restaurant['area']} of town."""
+                It is located in the {restaurant['area']} of town."""
             ).replace("\n", " ")
         return "I'm sorry, I don't know any restaurants that match your preferences."
 
