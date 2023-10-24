@@ -113,10 +113,9 @@ class DialogManager:
         # Declare global raw input to use in extracting preference
         global raw_input
         raw_input = user_input
-
-        #log the user input
-        if(self.dialog_config["experiment"] == True):
-            self.__log("\n USER: " + user_input)
+        
+        #log the user input if experiment is run
+        self.__log("\n USER: " + user_input)
 
         # Process user input
         prepped_user_input = prep_user_input(user_input)
@@ -164,6 +163,10 @@ class DialogManager:
                 and intent != IntentType.REQUEST
                 and intent != IntentType.RESTART
             )
+          and (
+          self.dialog_config["experiment"] == False
+          )
+
         ):
             self.__extract_and_handle_additional_preferences(prepped_user_input)
         else:
@@ -181,9 +184,8 @@ class DialogManager:
         # Handle text to speech
         self.__handle_tts(response) if self.dialog_config["tts"] else None
 
-        # log the message
-        if self.dialog_config["experiment"] == True:
-            self.__log("\n BOT: " + response)
+        # log the message if experiment is being done
+        self.__log("\n BOT: " + response)
         # Add message to history and display
         self.__add_message(None, response, self.name)
         # Show response word for word to simulate typing
@@ -249,19 +251,21 @@ class DialogManager:
         
         self.dialog_config["tts"] = True
         tasks = pd.read_csv("data/experiment_data/tasks.csv", sep=";")["tasks"].tolist()
-        first_gender = input("Do you want to start with male or female? enter \"m\" or \"f\": ")
+        first_gender = input("Do you want to start talking to John or Jane? enter \"John\" or \"Jane\": ").lower()
         
-        if first_gender == "m":
+        if first_gender == "john":
             folder_path = f"data/experiment_data/Male_first"
             self.dialog_config["gender"] = "male"
-        elif first_gender == "f":
+        elif first_gender == "jane":
             folder_path = f"data/experiment_data/Female_first"
             self.dialog_config["gender"] = "female"
         else: 
             self.__respond("That is not a valid option.")
             self.start_experiment()
 
-        name = input("please enter the name of the subject: ").replace(" ","_")
+        self.emoji, self.name = get_identity(self.dialog_config["gender"])
+
+        name = input("please enter subject's initials: ").replace(".","_")
         gender = input("please enter the subject's gender: ")
 
         #create folder for participant
@@ -269,27 +273,29 @@ class DialogManager:
         os.mkdir(folder_name)
 
         for i,task in enumerate(tasks[0:int(len(tasks)/2)]):
-            print(task)
+            print('\033[92m' + task + '\033[0m') #prints in color
             self.__reset()
-            if(first_gender == "m"):
+            if(first_gender == "john"):
                 self.log_path = f"{folder_name}/{i}_Male.txt" 
             else:
                 self.log_path = f"{folder_name}/{i}_Female.txt"
 
             self.__dialog_loop()
 
-        if first_gender == "m":
+        if first_gender == "john":
             self.dialog_config["gender"] = "female"
         else: 
             self.dialog_config["gender"] = "male"
+        
+        self.emoji, self.name = get_identity(self.dialog_config["gender"])
 
         for i, task in enumerate(tasks[int(len(tasks)/2):]):
-            print(task)
+            print('\033[92m' + task + '\033[0m') #prints in color
             self.__reset()
-            if(first_gender == "m"):
-                 self.log_path = f"{folder_name}/{i}_Female.txt"
+            if(first_gender == "john"):
+                 self.log_path = f"{folder_name}/{int(len(tasks)/2) + i}_Female.txt"
             else:
-                self.log_path = f"{folder_name}/{i}_Male.txt"
+                self.log_path = f"{folder_name}/{int(len(tasks)/2) + i}_Male.txt"
             self.__dialog_loop()
     
     def __reset(self):
@@ -426,7 +432,8 @@ class DialogManager:
         # If 1 option left, suggest it, we also cannot ask the user for additional preferences
         if restaurant is not None and other_options is None:
             self.__respond(self.__get_suggestion_string(restaurant))
-            self.__prompt_additional_preferences()
+            if(self.dialog_config["experiment"] == False):
+                self.__prompt_additional_preferences()
             self.has_given_recommendation = True
             return True
 
@@ -439,7 +446,8 @@ class DialogManager:
             self.__prompt_other_preferences()  # Prompt for other required preferences
             if not self.additional_query:
                 self.__respond(self.__get_suggestion_string(restaurant))
-                self.__prompt_additional_preferences()
+                if(self.dialog_config["experiment"] == False):
+                    self.__prompt_additional_preferences()
                 self.has_given_recommendation = True
                 return True
 
@@ -603,8 +611,9 @@ class DialogManager:
 
     # -------------- Logging ---------------------
     def __log(self, sentence):
-        with open(self.log_path, "a",encoding='utf8') as file:
-            file.write(sentence)
+        if(self.dialog_config["experiment"] == True):
+            with open(self.log_path, "a",encoding='utf8') as file:
+                file.write(sentence)
         
     # -------------- Speech methods --------------
     def __handle_tts(self, response: str):
