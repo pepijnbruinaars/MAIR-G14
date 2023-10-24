@@ -262,6 +262,7 @@ class DialogManager:
         else: 
             self.__respond("That is not a valid option.")
             self.start_experiment()
+            return
 
         self.emoji, self.name = get_identity(self.dialog_config["gender"])
 
