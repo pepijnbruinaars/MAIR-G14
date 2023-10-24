@@ -12,7 +12,10 @@ def main(args: argparse.Namespace):
     dialog_manager = DialogManager(dialog_config)
 
     # Start dialog
-    dialog_manager.start_dialog()
+    if dialog_config["experiment"]:
+        dialog_manager.start_experiment()
+    else:
+        dialog_manager.start_dialog()
 
     return
 
@@ -76,6 +79,12 @@ if __name__ == "__main__":
         help="Gender' of the bot",
         type=str,
         default="none"
+    )
+    parser.add_argument(
+        "-e", "--experiment",
+        help="Select if you want to conduct the experiment or have a normal conversation",
+        type=bool,
+        default = False
     )
     args = parser.parse_args()
     main(args)

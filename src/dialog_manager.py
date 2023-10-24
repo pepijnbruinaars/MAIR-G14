@@ -7,6 +7,7 @@ from helpers import (
     de_emojify,
     print_verbose,
     get_identity,
+
 )  # noqa
 
 # Necessary to hide the pygame import message
@@ -63,6 +64,8 @@ class DialogConfig(TypedDict):
     speech: bool  # Whether to take user input as speech or not
     typing_speed: float  # Optional typing speed multiplier for the system
     gender: str
+    experiment: bool # Whether the experiment is being done
+
 
 
 class Message(TypedDict):
@@ -80,6 +83,7 @@ class DialogManager:
     def __init__(self, dialog_config: DialogConfig):
         self.dialog_config = dialog_config
         self.done = False
+        self.log_path = None
         self.message_templates = get_message_templates()
         self.message_history: list[Message] = []
         self.emoji, self.name = get_identity(dialog_config["gender"])
@@ -109,10 +113,15 @@ class DialogManager:
         # Declare global raw input to use in extracting preference
         global raw_input
         raw_input = user_input
+        
+        #log the user input if experiment is run
+        self.__log("\n USER: " + user_input)
 
         # Process user input
         prepped_user_input = prep_user_input(user_input)
 
+        # log the user input
+        
         # Check if user wants to exit
         if prepped_user_input in ["exit", "quit", "bye", "goodbye"]:
             self.__add_message("exit", prepped_user_input, "User")
@@ -154,6 +163,10 @@ class DialogManager:
                 and intent != IntentType.REQUEST
                 and intent != IntentType.RESTART
             )
+          and (
+          self.dialog_config["experiment"] == False
+          )
+
         ):
             self.__extract_and_handle_additional_preferences(prepped_user_input)
         else:
@@ -173,6 +186,8 @@ class DialogManager:
             self.__handle_tts(response)
             return
 
+        # log the message if experiment is being done
+        self.__log("\n BOT: " + response)
         # Add message to history and display
         self.__add_message(None, response, self.name)
         # Show response word for word to simulate typing
@@ -243,6 +258,70 @@ class DialogManager:
             print()
             self.__handle_exit()
 
+    def start_experiment(self):
+        
+        self.dialog_config["tts"] = True
+        tasks = pd.read_csv("data/experiment_data/tasks.csv", sep=";")["tasks"].tolist()
+        first_gender = input("Do you want to start talking to John or Jane? enter \"John\" or \"Jane\": ").lower()
+        
+        if first_gender == "john":
+            folder_path = f"data/experiment_data/Male_first"
+            self.dialog_config["gender"] = "male"
+        elif first_gender == "jane":
+            folder_path = f"data/experiment_data/Female_first"
+            self.dialog_config["gender"] = "female"
+        else: 
+            self.__respond("That is not a valid option.")
+            self.start_experiment()
+            return
+
+        self.emoji, self.name = get_identity(self.dialog_config["gender"])
+
+        name = input("please enter subject's initials: ").replace(".","_")
+        gender = input("please enter the subject's gender: ")
+
+        #create folder for participant
+        folder_name = folder_path + f"/{name}_{gender}"
+        os.mkdir(folder_name)
+
+        for i,task in enumerate(tasks[0:int(len(tasks)/2)]):
+            print('\033[92m' + task + '\033[0m') #prints in color
+            self.__reset()
+            if(first_gender == "john"):
+                self.log_path = f"{folder_name}/{i}_Male.txt" 
+            else:
+                self.log_path = f"{folder_name}/{i}_Female.txt"
+
+            self.__dialog_loop()
+
+        if first_gender == "john":
+            self.dialog_config["gender"] = "female"
+        else: 
+            self.dialog_config["gender"] = "male"
+        
+        self.emoji, self.name = get_identity(self.dialog_config["gender"])
+
+        for i, task in enumerate(tasks[int(len(tasks)/2):]):
+            print('\033[92m' + task + '\033[0m') #prints in color
+            self.__reset()
+            if(first_gender == "john"):
+                 self.log_path = f"{folder_name}/{int(len(tasks)/2) + i}_Female.txt"
+            else:
+                self.log_path = f"{folder_name}/{int(len(tasks)/2) + i}_Male.txt"
+            self.__dialog_loop()
+    
+    def __reset(self):
+
+        self.done = False
+        self.stored_restaurant = None
+        self.stored_restaurant_options = None
+        self.additional_query = False
+        self.has_given_recommendation = False
+        self.stored_preferences = {
+            "food": None,
+            "pricerange": None,
+            "area": None,
+        }
     # -------------- Internal methods --------------
     def __dialog_loop(self):
         while not self.done:
@@ -365,7 +444,8 @@ class DialogManager:
         # If 1 option left, suggest it, we also cannot ask the user for additional preferences
         if restaurant is not None and other_options is None:
             self.__respond(self.__get_suggestion_string(restaurant))
-            self.__prompt_additional_preferences()
+            if(self.dialog_config["experiment"] == False):
+                self.__prompt_additional_preferences()
             self.has_given_recommendation = True
             return True
 
@@ -378,7 +458,8 @@ class DialogManager:
             self.__prompt_other_preferences()  # Prompt for other required preferences
             if not self.additional_query:
                 self.__respond(self.__get_suggestion_string(restaurant))
-                self.__prompt_additional_preferences()
+                if(self.dialog_config["experiment"] == False):
+                    self.__prompt_additional_preferences()
                 self.has_given_recommendation = True
                 return True
 
@@ -540,6 +621,12 @@ class DialogManager:
 
         return False
 
+    # -------------- Logging ---------------------
+    def __log(self, sentence):
+        if(self.dialog_config["experiment"] == True):
+            with open(self.log_path, "a",encoding='utf8') as file:
+                file.write(sentence)
+        
     # -------------- Speech methods --------------
     def __handle_tts(self, response: str):
         # Add message to history and display
